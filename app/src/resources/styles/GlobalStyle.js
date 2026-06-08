@@ -69,12 +69,11 @@ const GlobalStyle = createGlobalStyle`
     min-width: 220px;
     max-width: 300px;
     padding: 0;
-    /* sit above the mobile bottom nav */
-    bottom: 70px !important;
+    top: 16px !important;
     right: 16px !important;
 
     @media (min-width: 768px) {
-      bottom: 24px !important;
+      top: 24px !important;
       right: 24px !important;
     }
   }
@@ -91,7 +90,7 @@ const GlobalStyle = createGlobalStyle`
     font-weight: 700;
     letter-spacing: 0.05em;
     padding: 10px 14px;
-    min-height: unset;
+    min-height: unset !important;
   }
 
   .Toastify__toast--success {
