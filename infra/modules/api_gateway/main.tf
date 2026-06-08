@@ -33,12 +33,6 @@ resource "aws_apigatewayv2_integration" "lambda" {
   payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "options" {
-  api_id             = aws_apigatewayv2_api.this.id
-  route_key          = "OPTIONS /{proxy+}"
-  authorization_type = "NONE"
-}
-
 resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.this.id
   route_key = "$default"
