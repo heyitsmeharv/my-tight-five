@@ -1,73 +1,162 @@
-# template-terraform-boilerplate
-Reusable Terraform boilerplate repo: a clean starter structure for modules, multi environments, and CI-ready workflow.
+# My Tight Five
+
+A personal toolkit for stand-up comedians - write jokes, build sets, capture ideas, and practice your material.
 
 ---
 
-## What this repo is
+## What it does
 
-This repository is a practical Terraform starter designed to be:
+**My Tight Five** is a full-stack web app for managing stand-up comedy material:
 
-- easy to navigate as it grows
-- safe to run locally (repeatable scripts)
-- ready for CI (validate + plan on PRs, controlled applies)
-
-This repo does **not** enforce naming conventions. Any names you see are examples of shape and workflow.
-
-You will need to replace any boilerplate naming conventions used (Search for PROJECT_NAME)
-
----
-
-## What this repo contains
-
-- **Environment roots** under `infra/env/` (one folder per environment / AWS account)
-- **Reusable modules** under `infra/modules/` (inputs in, outputs out)
-- A consistent local workflow via `infra/scripts/`:
-  - `fmt → validate (includes tflint) → plan → apply`
-- A GitHub Actions workflow that:
-  - runs **validate + plan** on pull requests
-  - runs **apply** manually via `workflow_dispatch`
-  - supports approvals via GitHub Environments for sensitive environments
+- **Jokes** - write setups and punchlines, attach notes, record audio takes, tag by topic, track stage progression (draft → tested → polished), and link callbacks between jokes
+- **Sets** - build ordered sets from your joke library via drag-and-drop, set a target duration, and track how close you are to time
+- **Read-through** - step through a set card by card with spacebar to reveal punchlines, keeping your eyes off a script
+- **Practice mode** - a full-screen overlay with a countdown timer showing your current joke and what's coming next
+- **Ideas** - quick-capture a thought and promote it to a joke in one click
+- **Dashboard** - see your polished joke count, total material duration, and recent work at a glance
 
 ---
 
-## Git Bash only
+## Tech stack
 
-This repo assumes you run everything in **Git Bash** so we don’t need to accommodate CMD or Linux differences.
+### Frontend (`app/`)
+
+| Layer         | Technology                       |
+|---------------|----------------------------------|
+| Framework     | React 18 + Vite                  |
+| Routing       | react-router-dom v6              |
+| Styling       | styled-components v6             |
+| Drag and drop | @dnd-kit/core + @dnd-kit/sortable|
+| Notifications | react-toastify                   |
+| Icons         | lucide-react                     |
+| IDs           | ulid                             |
+
+### Backend (AWS, managed by Terraform)
+
+| Service                | Role                                                          |
+|------------------------|---------------------------------------------------------------|
+| **Cognito**            | User auth (sign up, sign in, JWT)                             |
+| **API Gateway** (HTTP) | JWT-authorised REST API                                       |
+| **Lambda** (Node.js)   | Single-function handler for all routes                        |
+| **DynamoDB**           | Single-table store - jokes, sets, ideas per user              |
+| **S3**                 | Audio recordings (pre-signed upload/download URLs)            |
+| **CloudFront**         | SPA CDN + HTTPS for the frontend                              |
+| **ACM**                | TLS certificates (CloudFront in us-east-1, API in eu-west-2) |
+| **Route 53**           | DNS - `mytightfive.co.uk` + `api.mytightfive.co.uk`          |
 
 ---
 
-## Local setup + end-to-end test (all commands)
+## Repository layout
 
-Run everything below in **Git Bash** from the repo root:
+```
+my-tight-five/
+├── app/                    # React/Vite frontend
+│   └── src/
+│       ├── pages/          # Route-level components
+│       ├── components/     # Shared UI (Button, Modal, Skeleton, …)
+│       ├── hooks/          # useResource (data fetching)
+│       ├── context/        # AuthContext, ThemeContext
+│       └── utils/          # api, time, stages
+├── infra/
+│   ├── env/sandbox/        # Sandbox environment root (tfvars, providers, main)
+│   ├── modules/            # Reusable Terraform modules
+│   │   ├── acm/
+│   │   ├── api_gateway/
+│   │   ├── cloudfront/
+│   │   ├── cognito/
+│   │   ├── dynamodb/
+│   │   ├── lambda/
+│   │   │   └── src/        # Lambda handler (index.mjs)
+│   │   ├── route53/
+│   │   └── s3/
+│   └── scripts/            # Local workflow scripts
+└── .github/workflows/      # CI - validate + plan on PR, apply on dispatch
+```
+
+---
+
+## Local development
+
+### Prerequisites
+
+- Node.js 22+
+- A deployed backend (or run `bash infra/scripts/prereqs.sh` to check infra tooling)
+
+### Frontend
 
 ```bash
-# verify prerequisites in THIS Git Bash shell
-bash infra/scripts/prereqs.sh
+cd app
+npm install
+npm run dev        # http://localhost:5173
+```
 
-# switch AWS context (AWS_PROFILE is set to match the environment and must exist under infra/env/)
-export ENVIRONMENT="<aws-account>"
+The dev server proxies nothing - it talks directly to the deployed API Gateway. Set the API URL in `app/src/utils/api.js` (or via an env var if you wire one up).
+
+---
+
+## Infrastructure
+
+All infrastructure is managed with Terraform under `infra/`. Run everything in **Git Bash** from the repo root.
+
+### First-time bootstrap (once per AWS account)
+
+```bash
+# Set your AWS profile for the target environment
+export ENVIRONMENT="sandbox"
 source infra/scripts/use-env.sh "$ENVIRONMENT"
 
-# confirm which AWS account/role you are about to use
+# Confirm the account you're about to touch
 bash infra/scripts/whoami.sh
 
-# bootstrap remote state + execution role in the CURRENT AWS account
-# creates: S3 state bucket, DynamoDB lock table, OIDC Github Role
-# generates: infra/backend.hcl
+# Create S3 state bucket, DynamoDB lock table, and GitHub OIDC role
 bash infra/scripts/bootstrap-state.sh "$ENVIRONMENT" --region eu-west-2
 
-# initialise Terraform for the environment using the generated backend config
+# Initialise Terraform with the generated backend config
 cd "infra/env/$ENVIRONMENT"
 terraform init -backend-config=backend.hcl
+```
 
-# CD BACK TO THE ROOT TO RUN THE BELOW SCRIPTS
+### Day-to-day workflow
 
-# validate (fmt check + validate + tflint)
+```bash
+# From the repo root after sourcing use-env.sh:
+
+# Format check + validate + tflint
 bash infra/scripts/validate.sh "$ENVIRONMENT"
 
-# plan (creates a saved tfplan file)
+# Generate a saved plan
 bash infra/scripts/plan.sh "$ENVIRONMENT"
-test -f "infra/env/$ENVIRONMENT/tfplan" && echo "tfplan created" || (echo "tfplan missing" && exit 1)
 
-# apply (applies the saved tfplan file)
+# Apply the saved plan
 bash infra/scripts/apply.sh "$ENVIRONMENT"
+```
+
+### CI/CD (GitHub Actions)
+
+- **Pull requests** - runs `validate` + `plan`, posts the plan output as a comment
+- **Manual dispatch** - runs `apply` against the selected environment, gated by a GitHub Environment approval
+
+The workflow assumes an OIDC role `GitHubOIDCTerraformRole` was created by the bootstrap script. No long-lived AWS credentials are stored in GitHub - only `AWS_ROLE_ARN` in the GitHub Environment.
+
+---
+
+## Environments
+
+| Environment | Domain | Region |
+|---|---|---|
+| sandbox | mytightfive.co.uk | eu-west-2 |
+
+---
+
+## Deploying the frontend
+
+After `terraform apply`, the CloudFront distribution and S3 origin bucket are created. Build and upload the app:
+
+```bash
+cd app
+npm run build
+aws s3 sync dist/ s3://<frontend-bucket-name>/ --delete
+aws cloudfront create-invalidation --distribution-id <cf-id> --paths "/*"
+```
+
+Bucket name and CloudFront distribution ID are available as Terraform outputs.

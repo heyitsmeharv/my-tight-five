@@ -1,0 +1,354 @@
+import { useState, useRef, useEffect } from 'react';
+import styled, { keyframes } from 'styled-components';
+import { Mic, StopCircle, Trash2, AlertCircle } from 'lucide-react';
+import { getAudioUploadUrl } from '../utils/api';
+import { Label, FormGroup } from './ui/Input';
+import Button from './ui/Button';
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+`;
+
+const RecordBtn = styled(Button)`
+  background: ${({ theme }) => theme.danger};
+  color: #fff;
+  border: none;
+  &:hover { opacity: 0.9; }
+`;
+
+const RecordingBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const Dot = styled.span`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.danger};
+  flex-shrink: 0;
+  animation: ${pulse} 1.2s ease-in-out infinite;
+`;
+
+const Timer = styled.span`
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.text};
+  min-width: 36px;
+`;
+
+const LevelTrack = styled.div`
+  flex: 1;
+  height: 4px;
+  background: ${({ theme }) => theme.border};
+  border-radius: 2px;
+  overflow: hidden;
+`;
+
+const LevelFill = styled.div`
+  height: 100%;
+  background: ${({ theme }) => theme.danger};
+  border-radius: 2px;
+  transition: width 0.05s linear;
+  width: ${({ $pct }) => $pct}%;
+`;
+
+const AudioRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const StopBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.danger};
+  border: 1px solid ${({ theme }) => theme.danger};
+  background: transparent;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.25rem;
+  opacity: 0.85;
+  transition: all 0.15s;
+
+  &:hover { opacity: 1; }
+`;
+
+const StyledAudio = styled.audio`
+  width: 100%;
+  display: ${({ $visible }) => $visible ? 'block' : 'none'};
+  border-radius: ${({ theme }) => theme.radiusSm};
+`;
+
+const ActionRow = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const ErrorMsg = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.danger};
+`;
+
+const Hint = styled.span`
+  font-size: 0.82rem;
+  opacity: 0.5;
+`;
+
+const wave = keyframes`
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(1); }
+`;
+
+const Waveform = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+`;
+
+const WaveBar = styled.span`
+  display: block;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: ${({ theme }) => theme.primary};
+  transform-origin: center;
+  animation: ${wave} 0.9s ease-in-out infinite;
+  animation-delay: ${({ $i }) => $i * 0.12}s;
+`;
+
+const MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+  ? 'audio/webm'
+  : 'audio/mp4';
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }) {
+  const [status, setStatus] = useState(audioUrl ? 'done' : 'idle');
+  const [localUrl, setLocalUrl] = useState(null);
+  const [audioReady, setAudioReady] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [level, setLevel] = useState(0);
+
+  const audioRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const blobRef = useRef(null);
+  const localUrlRef = useRef(null);
+  const streamRef = useRef(null);
+  const timerRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const audioCtxRef = useRef(null);
+
+  useEffect(() => {
+    if (audioUrl && status === 'idle') setStatus('done');
+  }, [audioUrl, status]);
+
+  useEffect(() => {
+    return () => {
+      if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current);
+      stopFeedback();
+      streamRef.current?.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  // Apply WebM duration fix to the JSX audio element via ref.
+  // WebM blobs from MediaRecorder report duration=Infinity until the browser
+  // scans the whole file, which we trigger by seeking past the end.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !localUrl) return;
+
+    let cancelled = false;
+    setAudioReady(false);
+
+    el.src = localUrl;
+    el.load();
+
+    const onMetadata = () => {
+      if (cancelled) return;
+      if (isFinite(el.duration)) { setAudioReady(true); return; }
+      el.currentTime = 1e101;
+      el.addEventListener('timeupdate', () => {
+        if (cancelled) return;
+        el.currentTime = 0;
+        setAudioReady(true);
+      }, { once: true });
+    };
+
+    el.addEventListener('loadedmetadata', onMetadata, { once: true });
+    const fallback = setTimeout(() => { if (!cancelled) setAudioReady(true); }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+      el.removeEventListener('loadedmetadata', onMetadata);
+    };
+  }, [localUrl]);
+
+  function startFeedback(stream) {
+    setElapsed(0);
+    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
+    try {
+      const ctx = new AudioContext();
+      audioCtxRef.current = ctx;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        setLevel(Math.round((avg / 255) * 100));
+        animFrameRef.current = requestAnimationFrame(tick);
+      }
+      tick();
+    } catch { /* Web Audio unavailable - meter stays at 0 */ }
+  }
+
+  function stopFeedback() {
+    clearInterval(timerRef.current);
+    cancelAnimationFrame(animFrameRef.current);
+    setLevel(0);
+    audioCtxRef.current?.close();
+    audioCtxRef.current = null;
+  }
+
+  async function startRecording() {
+    setStatus('requesting');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream, { mimeType: MIME_TYPE });
+      mediaRecorderRef.current = mr;
+
+      mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+
+      mr.onstop = () => {
+        const durationSecs = Math.round((Date.now() - startTimeRef.current) / 1000);
+        stopFeedback();
+        const blob = new Blob(chunksRef.current, { type: MIME_TYPE });
+        blobRef.current = blob;
+        if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        localUrlRef.current = url;
+        setLocalUrl(url);
+        setStatus('recorded');
+        stream.getTracks().forEach(t => t.stop());
+        onDuration?.(durationSecs);
+      };
+
+      mr.start();
+      startTimeRef.current = Date.now();
+      startFeedback(stream);
+      setStatus('recording');
+    } catch {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      setStatus('error');
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop();
+  }
+
+  async function handleUpload() {
+    setStatus('uploading');
+    try {
+      const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(jokeId, MIME_TYPE);
+      await fetch(uploadUrl, { method: 'PUT', body: blobRef.current, headers: { 'Content-Type': MIME_TYPE } });
+      onChange(newAudioUrl);
+      setStatus('done');
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  function discard() {
+    if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current);
+    localUrlRef.current = null;
+    setLocalUrl(null);
+    blobRef.current = null;
+    setStatus('idle');
+  }
+
+  function deleteRecording() {
+    onChange(null);
+    setStatus('idle');
+  }
+
+  return (
+    <FormGroup>
+      <Label>Recording</Label>
+      <AudioRow>
+        {(status === 'idle' || status === 'requesting') && (
+          <RecordBtn type="button" onClick={startRecording} $loading={status === 'requesting'} disabled={status === 'requesting'}>
+            <Mic size={15} strokeWidth={2} />
+            Record
+          </RecordBtn>
+        )}
+
+        {status === 'recording' && (
+          <RecordingBar>
+            <Dot />
+            <Timer>{formatTime(elapsed)}</Timer>
+            <LevelTrack><LevelFill $pct={level} /></LevelTrack>
+            <StopBtn type="button" onClick={stopRecording}>
+              <StopCircle size={14} strokeWidth={2.5} />
+              STOP
+            </StopBtn>
+          </RecordingBar>
+        )}
+
+        {(status === 'recorded' || status === 'uploading') && (
+          <>
+            <StyledAudio ref={audioRef} controls $visible={audioReady} />
+            {!audioReady && <Waveform>{[0,1,2,3,4].map(i => <WaveBar key={i} $i={i} />)}</Waveform>}
+            <ActionRow>
+              <Button type="button" onClick={handleUpload} disabled={status === 'uploading' || !audioReady}>
+                {status === 'uploading' ? 'Saving…' : 'Save recording'}
+              </Button>
+              <Button type="button" $variant="ghost" onClick={discard} disabled={status === 'uploading'}>
+                Discard
+              </Button>
+            </ActionRow>
+          </>
+        )}
+
+        {status === 'done' && audioUrl && (
+          <>
+            <audio controls src={audioUrl} style={{ width: '100%', display: 'block' }} />
+            <Button type="button" $variant="ghost" onClick={deleteRecording}>
+              <Trash2 size={14} strokeWidth={2} />
+              Delete recording
+            </Button>
+          </>
+        )}
+
+        {status === 'done' && !audioUrl && (
+          <Hint>Recording saved - hit Save Joke to keep it.</Hint>
+        )}
+
+        {status === 'error' && (
+          <>
+            <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: 5, verticalAlign: 'middle' }} />Recording failed. Check microphone permissions and try again.</ErrorMsg>
+            <Button type="button" $variant="ghost" onClick={() => setStatus('idle')}>Try again</Button>
+          </>
+        )}
+      </AudioRow>
+    </FormGroup>
+  );
+}

@@ -19,7 +19,7 @@
 # - Always check the printed Account + Caller ARN before continuing.
 
 usage() {
-  echo "Usage: bash infra/scripts/bootstrap-state.sh <environment> [--region eu-west-2] [--github-role-name GitHubOIDCTerraformRole] [--github-repo owner/repo] [--project-name template-terraform-boilerplate]"
+  echo "Usage: bash infra/scripts/bootstrap-state.sh <environment> [--region eu-west-2] [--github-role-name GitHubOIDCTerraformRole] [--github-repo owner/repo] [--project-name my-tight-five]"
   exit 1
 }
 
@@ -34,8 +34,8 @@ fi
 
 REGION="${AWS_REGION:-eu-west-2}"
 GITHUB_ROLE_NAME="GitHubOIDCTerraformRole"
-GITHUB_REPO=""
-PROJECT_NAME="template-terraform-boilerplate"
+GITHUB_REPO="heyitsmeharv/my-tight-five"
+PROJECT_NAME="my-tight-five"
 
 while [ "${1:-}" != "" ]; do
   case "$1" in

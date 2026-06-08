@@ -13,7 +13,7 @@
 # - backend.hcl is intentionally NOT committed to git.
 
 usage() {
-  echo "Usage: bash infra/scripts/write-backend-hcl.sh <environment> [--region eu-west-2] [--project-name template-terraform-boilerplate]"
+  echo "Usage: bash infra/scripts/write-backend-hcl.sh <environment> [--region eu-west-2] [--project-name my-tight-five]"
   exit 1
 }
 
@@ -27,7 +27,7 @@ if [ -z "$ENVIRONMENT" ]; then
 fi
 
 REGION="${AWS_REGION:-eu-west-2}"
-PROJECT_NAME="template-terraform-boilerplate"
+PROJECT_NAME="my-tight-five"
 
 while [ "${1:-}" != "" ]; do
   case "$1" in

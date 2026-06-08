@@ -13,3 +13,8 @@ variable "aws_region" {
   description = "AWS region to deploy into."
   default     = "eu-west-2"
 }
+
+variable "domain" {
+  type        = string
+  description = "Root domain name, registered via Route 53 Domains before applying."
+}
