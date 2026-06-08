@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 resource "aws_iam_role" "lambda" {
   name = "${var.project}-${var.environment}-lambda-role"
 
