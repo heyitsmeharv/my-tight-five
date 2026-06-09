@@ -379,7 +379,6 @@ export default function Dashboard() {
             {recentJokes.map((joke, i) => {
               const stageKey = joke.stage || 'draft';
               const color = STAGE_COLOR[stageKey]?.color;
-              const tags = joke.tags?.slice(0, 4) ?? [];
               const callbackJoke = joke.callback_to ? jokes.find(j => j.id === joke.callback_to) : null;
               return (
                 <RecentCard key={joke.id} to={`/jokes/${joke.id}`} $color={color} $i={i}>
@@ -399,11 +398,6 @@ export default function Dashboard() {
                     <StageBadge stage={stageKey} />
                     {joke.duration_seconds > 0 && <RecentDuration>{formatDuration(joke.duration_seconds)}</RecentDuration>}
                     <RecentTime>{relativeTime(joke.created_at)}</RecentTime>
-                    {tags.length > 0 && (
-                      <RecentTagRow>
-                        {tags.map(t => <RecentTag key={t}>#{t}</RecentTag>)}
-                      </RecentTagRow>
-                    )}
                     {joke.audio_url && <RecentSpacer />}
                     {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
                   </RecentFooter>

@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ulid } from 'ulid';
 import styled from 'styled-components';
 import { toast } from 'react-toastify';
-import { ChevronDown, ChevronRight, X } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import { JokeEditSkeleton } from '../components/ui/Skeleton';
 import PageHeader from '../components/ui/PageHeader';
@@ -89,52 +89,6 @@ const StageBtn = styled.button`
   }
 `;
 
-const TagArea = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  min-height: 2rem;
-`;
-
-const TagChip = styled.span`
-  background: ${({ theme }) => theme.primaryLight};
-  color: ${({ theme }) => theme.primary};
-  border-radius: 99px;
-  padding: 0.1875rem 0.625rem;
-  font-family: ${({ theme }) => theme.fontMono};
-  font-size: 0.78rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3125rem;
-
-  button {
-    color: inherit;
-    opacity: 0.6;
-    font-size: 0.9rem;
-    line-height: 1;
-    &:hover { opacity: 1; }
-  }
-`;
-
-const TagInput = styled.input`
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  color: ${({ theme }) => theme.text};
-  font-family: ${({ theme }) => theme.fontMono};
-  font-size: 0.75rem;
-  padding: 0.125rem 0.25rem;
-  width: 6.25rem;
-  transition: border-color 0.15s;
-
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.primary};
-  }
-  &::placeholder { color: ${({ theme }) => theme.textMuted}; opacity: 0.5; }
-`;
 
 const DetailsToggle = styled.button`
   font-family: ${({ theme }) => theme.fontMono};
@@ -209,11 +163,10 @@ export default function JokeEdit() {
     stage: 'draft',
     duration_seconds: '',
     notes: '',
-    tags: [],
+    category: '',
     callback_to: '',
     audio_url: null,
   });
-  const [tagInput, setTagInput] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -251,7 +204,7 @@ export default function JokeEdit() {
           stage: (joke.stage && joke.stage !== 'idea') ? joke.stage : 'draft',
           duration_seconds: joke.duration_seconds || '',
           notes: joke.notes || '',
-          tags: joke.tags || [],
+          category: joke.tags?.[0] || '',
           callback_to: joke.callback_to || '',
           audio_url: joke.audio_url || null,
         });
@@ -279,22 +232,14 @@ export default function JokeEdit() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
-  function addTag() {
-    const t = tagInput.trim().toLowerCase().replace(/^#/, '');
-    if (t && !form.tags.includes(t)) set('tags', [...form.tags, t]);
-    setTagInput('');
-  }
-
-  function removeTag(t) {
-    set('tags', form.tags.filter(x => x !== t));
-  }
-
   async function handleSave() {
     if (!form.setup.trim()) return toast.error('Add a setup first');
     setSaving(true);
     try {
+      const { category, ...rest } = form;
       const data = {
-        ...form,
+        ...rest,
+        tags: category.trim() ? [category.trim().toLowerCase().replace(/^#/, '')] : [],
         duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
         callback_to: form.callback_to || null,
       };
@@ -377,18 +322,20 @@ export default function JokeEdit() {
           ))}
         </StageRow>
 
-        <TagArea>
-          {form.tags.map(t => (
-            <TagChip key={t}>#{t}<button type="button" onClick={() => removeTag(t)}><X size={11} strokeWidth={2.5} /></button></TagChip>
-          ))}
-          <TagInput
-            placeholder="#tag"
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } if (e.key === ',' || e.key === ' ') { e.preventDefault(); addTag(); } }}
-            onBlur={addTag}
+        <FormGroup style={{ marginBottom: '1.25rem' }}>
+          <Label>Category</Label>
+          <InlineInput
+            list="joke-categories"
+            placeholder="e.g. dating, work, family"
+            value={form.category}
+            onChange={e => set('category', e.target.value.toLowerCase().replace(/^#/, ''))}
           />
-        </TagArea>
+          <datalist id="joke-categories">
+            {[...new Set(jokes.filter(j => j.tags?.[0]).map(j => j.tags[0]))].map(cat => (
+              <option key={cat} value={cat} />
+            ))}
+          </datalist>
+        </FormGroup>
 
         <AudioRecorder
           jokeId={isNew ? pendingIdRef.current : id}

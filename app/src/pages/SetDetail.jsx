@@ -271,9 +271,7 @@ const JokeMeta = styled.div`
   flex-wrap: wrap;
 `;
 
-const JokeTagRow = styled.div`display: flex; gap: 0.25rem; flex-wrap: wrap;`;
-
-const JokeTag = styled.span`
+const JokeCategory = styled.span`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.6rem;
   font-weight: 700;
@@ -281,6 +279,8 @@ const JokeTag = styled.span`
   background: ${({ theme }) => theme.primaryLight};
   border-radius: 99px;
   padding: 0.0625rem 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 `;
 
 const FooterSpacer = styled.div`flex: 1;`;
@@ -380,7 +380,7 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
 
   const stageKey = joke.stage || 'draft';
   const color = STAGE_COLOR[stageKey]?.color;
-  const tags = joke.tags?.slice(0, 4) ?? [];
+  const category = joke.tags?.[0] ?? null;
   const callbackJoke = joke.callback_to ? jokeMap?.[joke.callback_to] : null;
 
   return (
@@ -413,11 +413,7 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
           {joke.duration_seconds > 0 && (
             <JokeDuration>{formatDuration(joke.duration_seconds)}</JokeDuration>
           )}
-          {tags.length > 0 && (
-            <JokeTagRow>
-              {tags.map(t => <JokeTag key={t}>#{t}</JokeTag>)}
-            </JokeTagRow>
-          )}
+          {category && <JokeCategory>{category}</JokeCategory>}
           {joke.audio_url && <FooterSpacer />}
           {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
         </JokeMeta>

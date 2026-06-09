@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { X, Plus, CornerDownLeft } from 'lucide-react';
+import { X, Plus, CornerDownLeft, ChevronDown } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -75,6 +75,21 @@ const Stack = styled.div`
   @media (max-width: 400px) {
     padding: 0.625rem 0.75rem;
   }
+`;
+
+const Thread = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ThreadChildren = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.625rem;
+  margin-left: 1.375rem;
+  padding-left: 1rem;
+  border-left: 2px solid ${({ theme }) => theme.border};
 `;
 
 const JokeCard = styled.div`
@@ -168,22 +183,42 @@ const CallbackLink = styled.button`
   }
 `;
 
-const TagRow = styled.div`
-  display: flex;
-  gap: 0.25rem;
-  flex-wrap: wrap;
-`;
-
 const Spacer = styled.div`flex: 1;`;
 
-const Tag = styled.span`
+const SectionLabel = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
   font-family: ${({ theme }) => theme.fontMono};
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.primary};
-  background: ${({ theme }) => theme.primaryLight};
-  border-radius: 99px;
-  padding: 0.125rem 0.4375rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.875rem 0 0.5rem;
+  transition: color 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.text}; }
+`;
+
+const SectionLine = styled.div`
+  flex: 1;
+  height: 1px;
+  background: ${({ theme }) => theme.border};
+`;
+
+const SectionCount = styled.span`
+  font-size: 0.75rem;
+  opacity: 0.5;
+`;
+
+const GroupCards = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 0.25rem;
 `;
 
 const DeleteBtn = styled(Button)`
@@ -196,6 +231,28 @@ const DeleteBtn = styled(Button)`
     transition: opacity 0.15s;
     ${JokeCard}:hover & { opacity: 1; }
   }
+`;
+
+const ThreadToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.secondary};
+  background: ${({ theme }) => theme.accent};
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+
+  svg {
+    transition: transform 0.2s ease;
+    transform: rotate(${({ $collapsed }) => $collapsed ? '-90deg' : '0deg'});
+  }
+
+  &:hover { opacity: 0.75; }
 `;
 
 
@@ -214,12 +271,100 @@ export default function Jokes() {
   const [stage, setStage] = useState('all');
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [collapsed, setCollapsed] = useState(new Set());
+
+  function toggleCollapse(id, e) {
+    e.stopPropagation();
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  const [collapsedGroups, setCollapsedGroups] = useState(new Set());
+
+  function toggleGroup(cat) {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  }
 
   useEffect(() => { document.title = 'Jokes | My Tight Five'; }, []);
 
   if (loading) return <JokesPageSkeleton />;
 
   const filtered = stage === 'all' ? jokes : jokes.filter(j => (j.stage || 'draft') === stage);
+
+  const filteredIds = new Set(filtered.map(j => j.id));
+  const cbMap = {};
+  filtered.forEach(j => {
+    if (j.callback_to && filteredIds.has(j.callback_to)) {
+      (cbMap[j.callback_to] = cbMap[j.callback_to] || []).push(j);
+    }
+  });
+  const roots = filtered.filter(j => !j.callback_to || !filteredIds.has(j.callback_to));
+
+  const groups = {};
+  roots.forEach(joke => {
+    const cat = joke.tags?.[0] || '';
+    (groups[cat] = groups[cat] || []).push(joke);
+  });
+  const groupKeys = Object.keys(groups).sort((a, b) => {
+    if (!a && b) return 1;
+    if (a && !b) return -1;
+    return a.localeCompare(b);
+  });
+
+  function renderNode(joke, depth, animI) {
+    const stageKey = joke.stage || 'draft';
+    const color = STAGE_COLOR[stageKey]?.color;
+    const callbackJoke = joke.callback_to ? jokes.find(j => j.id === joke.callback_to) : null;
+    const children = cbMap[joke.id] || [];
+    const hasChildren = children.length > 0;
+    const isCollapsed = collapsed.has(joke.id);
+
+    return (
+      <Thread key={joke.id}>
+        <JokeCard $i={animI} $color={color} onClick={() => navigate(`/jokes/${joke.id}`)}>
+          <CardSetup>{joke.setup || 'Untitled'}</CardSetup>
+          {joke.punchline && <CardPunchline>{joke.punchline}</CardPunchline>}
+          {joke.notes && <CardNotes>{joke.notes}</CardNotes>}
+          {joke.callback_to && (
+            <CallbackLink
+              title={callbackJoke?.setup || 'Jump to callback joke'}
+              onClick={e => { e.stopPropagation(); navigate(`/jokes/${joke.callback_to}`); }}
+            >
+              <CornerDownLeft size={12} strokeWidth={2} style={{ flexShrink: 0 }} />
+              {callbackJoke?.setup ?? '—'}
+            </CallbackLink>
+          )}
+          <CardFooter>
+            <StageBadge stage={stageKey} />
+            {joke.duration_seconds > 0 && <CardDuration>{formatDuration(joke.duration_seconds)}</CardDuration>}
+            {(joke.audio_url || hasChildren) && <Spacer />}
+            {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+            {hasChildren && (
+              <ThreadToggle $collapsed={isCollapsed} onClick={e => toggleCollapse(joke.id, e)}>
+                {isCollapsed && children.length}
+                <ChevronDown size={12} strokeWidth={2} />
+              </ThreadToggle>
+            )}
+          </CardFooter>
+          <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
+            <X size={14} strokeWidth={2} />
+          </DeleteBtn>
+        </JokeCard>
+        {hasChildren && !isCollapsed && (
+          <ThreadChildren>
+            {children.map((child, ci) => renderNode(child, depth + 1, animI + ci + 1))}
+          </ThreadChildren>
+        )}
+      </Thread>
+    );
+  }
 
   async function handleDelete() {
     setDeleteLoading(true);
@@ -263,54 +408,34 @@ export default function Jokes() {
             : <EmptyState message={`No ${STAGE_FILTERS.find(f => f.value === stage)?.label.toLowerCase() ?? stage} jokes.`} />
         ) : (
           <Stack>
-            {filtered.map((joke, i) => {
-            const stageKey = joke.stage || 'draft';
-            const color = STAGE_COLOR[stageKey]?.color;
-            const tags = joke.tags?.slice(0, 4) ?? [];
-            const callbackJoke = joke.callback_to ? jokes.find(j => j.id === joke.callback_to) : null;
-
-            return (
-              <JokeCard key={joke.id} $i={i} $color={color} onClick={() => navigate(`/jokes/${joke.id}`)}>
-                <CardSetup>{joke.setup || 'Untitled'}</CardSetup>
-
-                {joke.punchline && (
-                  <CardPunchline>{joke.punchline}</CardPunchline>
-                )}
-
-                {joke.notes && (
-                  <CardNotes>{joke.notes}</CardNotes>
-                )}
-
-                {joke.callback_to && (
-                  <CallbackLink
-                    title={callbackJoke?.setup || 'Jump to callback joke'}
-                    onClick={e => { e.stopPropagation(); navigate(`/jokes/${joke.callback_to}`); }}
-                  >
-                    <CornerDownLeft size={10} strokeWidth={2} style={{ flexShrink: 0 }} />
-                    {callbackJoke?.setup ?? '—'}
-                  </CallbackLink>
-                )}
-
-                <CardFooter>
-                  <StageBadge stage={stageKey} />
-                  {joke.duration_seconds > 0 && (
-                    <CardDuration>{formatDuration(joke.duration_seconds)}</CardDuration>
+            {groupKeys.map(cat => {
+              const groupJokes = groups[cat];
+              const label = cat || 'Uncategorized';
+              const isGroupCollapsed = collapsedGroups.has(cat);
+              return (
+                <div key={cat || '__none__'}>
+                  <SectionLabel onClick={() => toggleGroup(cat)}>
+                    <ChevronDown
+                      size={11}
+                      strokeWidth={2.5}
+                      style={{
+                        transform: isGroupCollapsed ? 'rotate(-90deg)' : 'none',
+                        transition: 'transform 0.2s ease',
+                        flexShrink: 0,
+                      }}
+                    />
+                    {label}
+                    <SectionLine />
+                    <SectionCount>{groupJokes.length}</SectionCount>
+                  </SectionLabel>
+                  {!isGroupCollapsed && (
+                    <GroupCards>
+                      {groupJokes.map((joke, i) => renderNode(joke, 0, i))}
+                    </GroupCards>
                   )}
-                  {tags.length > 0 && (
-                    <TagRow>
-                      {tags.map(t => <Tag key={t}>#{t}</Tag>)}
-                    </TagRow>
-                  )}
-                  {joke.audio_url && <Spacer />}
-                  {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
-                </CardFooter>
-
-                <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
-                  <X size={14} strokeWidth={2} />
-                </DeleteBtn>
-              </JokeCard>
-            );
-          })}
+                </div>
+              );
+            })}
           </Stack>
         )}
       </ScrollArea>
