@@ -66,8 +66,8 @@ const GlobalStyle = createGlobalStyle`
   /* ── Toast overrides ─────────────────────────────────────── */
   .Toastify__toast-container {
     width: auto;
-    min-width: 220px;
-    max-width: 300px;
+    min-width: 260px;
+    max-width: 360px;
     padding: 0;
     top: 16px !important;
     right: 16px !important;
@@ -86,11 +86,11 @@ const GlobalStyle = createGlobalStyle`
     box-shadow: ${({ theme }) => theme.shadowMd};
     color: ${({ theme }) => theme.text};
     font-family: ${({ theme }) => theme.fontMono};
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    padding: 10px 14px;
-    min-height: unset !important;
+    padding: 12px 16px;
+    min-height: 48px;
   }
 
   .Toastify__toast--success {
@@ -108,6 +108,8 @@ const GlobalStyle = createGlobalStyle`
   .Toastify__toast-body {
     padding: 0;
     margin: 0;
+    display: flex;
+    align-items: center;
   }
 
   .Toastify__toast-icon {

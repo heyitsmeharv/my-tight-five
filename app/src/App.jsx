@@ -66,8 +66,6 @@ export default function App() {
         autoClose={2000}
         closeButton={false}
         newestOnTop
-        toastStyle={{ minHeight: 'unset', padding: '8px 14px', fontSize: '0.85rem', borderRadius: 6 }}
-        bodyStyle={{ padding: 0, margin: 0 }}
       />
       <Layout>
         <Routes>

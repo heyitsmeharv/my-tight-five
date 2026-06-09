@@ -330,7 +330,7 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
 
         {status === 'done' && audioUrl && (
           <>
-            <audio controls src={audioUrl} style={{ width: '100%', display: 'block' }} />
+            <StyledAudio $visible controls src={audioUrl} />
             <Button type="button" $variant="ghost" onClick={deleteRecording}>
               <Trash2 size={14} strokeWidth={2} />
               Delete recording

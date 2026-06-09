@@ -152,8 +152,8 @@ export default function Sets() {
                 <Input placeholder="Open Mic - 5 min" value={name} onChange={e => setName(e.target.value)} autoFocus />
               </FormGroup>
               <FormGroup>
-                <Label>Target duration (seconds)</Label>
-                <Input type="text" placeholder="e.g. 300" value={target} onChange={e => setTarget(e.target.value)} />
+                <Label>Target duration</Label>
+                <Input type="text" placeholder="e.g. 5:00 or 300s" value={target} onChange={e => setTarget(e.target.value)} />
               </FormGroup>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button type="button" $variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Button>
