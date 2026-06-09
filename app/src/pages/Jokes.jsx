@@ -20,24 +20,37 @@ const fadeUp = keyframes`
 `;
 
 const Page = styled.div`
-  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   max-width: 600px;
   margin: 0 auto;
+  min-width: 0;
+  overflow: hidden;
+`;
+
+const ScrollArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 5rem;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1rem;
+  }
 `;
 
 const Filters = styled.div`
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   overflow-x: auto;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
 `;
 
 const FilterBtn = styled.button`
-  padding: 4px 12px;
+  padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.75rem;
@@ -48,7 +61,7 @@ const FilterBtn = styled.button`
   border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.border};
   background: ${({ $active, theme }) => $active ? theme.primaryLight : 'transparent'};
   color: ${({ $active, theme }) => $active ? theme.primary : theme.textMuted};
-  min-height: 30px;
+  min-height: 1.875rem;
   cursor: pointer;
   transition: all 0.15s;
 `;
@@ -56,8 +69,12 @@ const FilterBtn = styled.button`
 const Stack = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+
+  @media (max-width: 400px) {
+    padding: 0.625rem 0.75rem;
+  }
 `;
 
 const JokeCard = styled.div`
@@ -65,7 +82,7 @@ const JokeCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 14px 46px 14px 16px;
+  padding: 0.875rem 2.875rem 0.875rem 1rem;
   cursor: pointer;
   position: relative;
   animation: ${fadeUp} 0.2s ease both;
@@ -85,7 +102,7 @@ const CardSetup = styled.p`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  margin-bottom: 5px;
+  margin-bottom: 0.3125rem;
 `;
 
 const CardPunchline = styled.p`
@@ -97,7 +114,7 @@ const CardPunchline = styled.p`
   -webkit-box-orient: vertical;
   color: ${({ theme }) => theme.textMuted};
   font-style: italic;
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 `;
 
 const CardNotes = styled.p`
@@ -108,15 +125,15 @@ const CardNotes = styled.p`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 10px;
-  padding-left: 8px;
+  margin-bottom: 0.625rem;
+  padding-left: 0.5rem;
   border-left: 2px solid ${({ theme }) => theme.border};
 `;
 
 const CardFooter = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 `;
 
@@ -130,7 +147,7 @@ const CardDuration = styled.span`
 const CallbackLink = styled.button`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   width: 100%;
   text-align: left;
   font-family: ${({ theme }) => theme.fontMono};
@@ -153,7 +170,7 @@ const CallbackLink = styled.button`
 
 const TagRow = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
   flex-wrap: wrap;
 `;
 
@@ -166,7 +183,7 @@ const Tag = styled.span`
   color: ${({ theme }) => theme.primary};
   background: ${({ theme }) => theme.primaryLight};
   border-radius: 99px;
-  padding: 2px 7px;
+  padding: 0.125rem 0.4375rem;
 `;
 
 const DeleteBtn = styled(Button)`
@@ -237,15 +254,16 @@ export default function Jokes() {
         ))}
       </Filters>
 
-      {filtered.length === 0 ? (
-        stage === 'all'
-          ? <EmptyState>
-              <EmptyAction type="button" onClick={() => navigate('/jokes/new')}>Write a joke</EmptyAction>
-            </EmptyState>
-          : <EmptyState message={`No ${STAGE_FILTERS.find(f => f.value === stage)?.label.toLowerCase() ?? stage} jokes.`} />
-      ) : (
-        <Stack>
-          {filtered.map((joke, i) => {
+      <ScrollArea>
+        {filtered.length === 0 ? (
+          stage === 'all'
+            ? <EmptyState>
+                <EmptyAction type="button" onClick={() => navigate('/jokes/new')}>Write a joke</EmptyAction>
+              </EmptyState>
+            : <EmptyState message={`No ${STAGE_FILTERS.find(f => f.value === stage)?.label.toLowerCase() ?? stage} jokes.`} />
+        ) : (
+          <Stack>
+            {filtered.map((joke, i) => {
             const stageKey = joke.stage || 'draft';
             const color = STAGE_COLOR[stageKey]?.color;
             const tags = joke.tags?.slice(0, 4) ?? [];
@@ -293,8 +311,9 @@ export default function Jokes() {
               </JokeCard>
             );
           })}
-        </Stack>
-      )}
+          </Stack>
+        )}
+      </ScrollArea>
 
       {deleting && (
         <ConfirmModal

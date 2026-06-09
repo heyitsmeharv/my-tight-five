@@ -5,8 +5,8 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 48px 24px;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
   text-align: center;
   color: ${({ theme }) => theme.textMuted};
 `;

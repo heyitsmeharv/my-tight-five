@@ -14,17 +14,25 @@ import AudioRecorder from '../components/AudioRecorder';
 import { STAGES, STAGE_COLOR } from '../utils/stages';
 
 const Page = styled.div`
-  padding-bottom: 80px;
+  padding-bottom: 5rem;
   max-width: 600px;
   margin: 0 auto;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1.5rem;
+  }
 `;
 
 const Body = styled.div`
-  padding: 20px 16px;
+  padding: 1rem;
+
+  @media (max-width: 400px) {
+    padding: 0.75rem;
+  }
 `;
 
 const WritingArea = styled.div`
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 `;
 
 const BitTextarea = styled.textarea`
@@ -36,7 +44,7 @@ const BitTextarea = styled.textarea`
   line-height: 1.65;
   resize: none;
   padding: 0;
-  min-height: ${({ $large }) => $large ? '100px' : '72px'};
+  min-height: ${({ $large }) => $large ? '6.25rem' : '4.5rem'};
   transition: color 0.15s;
 
   &:focus { outline: none; }
@@ -48,18 +56,18 @@ const BitTextarea = styled.textarea`
 
 const Divider = styled.div`
   border-top: 1px solid ${({ theme }) => theme.border};
-  margin: 12px 0;
+  margin: 0.75rem 0;
 `;
 
 const StageRow = styled.div`
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 `;
 
 const StageBtn = styled.button`
-  padding: 4px 12px;
+  padding: 0.25rem 0.75rem;
   border-radius: 99px;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.78rem;
@@ -73,7 +81,7 @@ const StageBtn = styled.button`
   color: ${({ $active, $stage, theme }) =>
     $active ? STAGE_COLOR[$stage]?.color : theme.textMuted};
   cursor: pointer;
-  min-height: 30px;
+  min-height: 1.875rem;
   transition: all 0.15s;
 
   &:hover {
@@ -84,22 +92,22 @@ const StageBtn = styled.button`
 const TagArea = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.375rem;
   align-items: center;
-  margin-bottom: 20px;
-  min-height: 32px;
+  margin-bottom: 1.25rem;
+  min-height: 2rem;
 `;
 
 const TagChip = styled.span`
   background: ${({ theme }) => theme.primaryLight};
   color: ${({ theme }) => theme.primary};
   border-radius: 99px;
-  padding: 3px 10px;
+  padding: 0.1875rem 0.625rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.78rem;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
 
   button {
     color: inherit;
@@ -117,8 +125,8 @@ const TagInput = styled.input`
   color: ${({ theme }) => theme.text};
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.75rem;
-  padding: 2px 4px;
-  width: 100px;
+  padding: 0.125rem 0.25rem;
+  width: 6.25rem;
   transition: border-color 0.15s;
 
   &:focus {
@@ -136,10 +144,10 @@ const DetailsToggle = styled.button`
   text-transform: uppercase;
   color: ${({ theme }) => theme.textMuted};
   padding: 0;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   transition: color 0.15s;
 
   &:hover { color: ${({ theme }) => theme.text}; }
@@ -147,8 +155,8 @@ const DetailsToggle = styled.button`
 
 const DetailsPanel = styled.div`
   border-top: 1px solid ${({ theme }) => theme.border};
-  padding-top: 16px;
-  margin-bottom: 20px;
+  padding-top: 1rem;
+  margin-bottom: 1.25rem;
 `;
 
 const NoteTextarea = styled.textarea`
@@ -160,8 +168,8 @@ const NoteTextarea = styled.textarea`
   font-size: 0.9rem;
   line-height: 1.6;
   resize: none;
-  padding: 4px 0;
-  min-height: 60px;
+  padding: 0.25rem 0;
+  min-height: 3.75rem;
 
   &:focus { outline: none; border-color: ${({ theme }) => theme.primary}; }
   &::placeholder { color: ${({ theme }) => theme.textMuted}; opacity: 0.45; }
@@ -173,9 +181,9 @@ const InlineInput = styled.input`
   border-bottom: 1px solid ${({ theme }) => theme.border};
   color: ${({ theme }) => theme.text};
   font-size: 0.9rem;
-  padding: 4px 0;
+  padding: 0.25rem 0;
   width: 100%;
-  min-height: 36px;
+  min-height: 2.25rem;
 
   &:focus { outline: none; border-color: ${({ theme }) => theme.primary}; }
   &::placeholder { color: ${({ theme }) => theme.textMuted}; opacity: 0.45; }
@@ -183,7 +191,7 @@ const InlineInput = styled.input`
 
 const SaveRow = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
 `;
 
 export default function JokeEdit() {

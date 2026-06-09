@@ -19,17 +19,20 @@ const fadeUp = keyframes`
 `;
 
 const Page = styled.div`
-  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   max-width: 600px;
   margin: 0 auto;
+  min-width: 0;
+  overflow: hidden;
 `;
 
-/* Inline capture bar */
 const CaptureBar = styled.form`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   transition: background 0.15s;
 
@@ -44,24 +47,31 @@ const CaptureInput = styled.input`
   border: none;
   color: ${({ theme }) => theme.text};
   font-size: 0.92rem;
-  padding: 6px 0;
-  min-height: 36px;
+  padding: 0.375rem 0;
+  min-height: 2.25rem;
 
   &:focus { outline: none; }
   &::placeholder { color: ${({ theme }) => theme.textMuted}; opacity: 0.5; }
 `;
 
-/* List */
 const IdeaList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   border-top: 1px solid ${({ theme }) => theme.border};
+  padding-bottom: 5rem;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1rem;
+  }
 `;
 
 const IdeaRow = styled.div`
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 6.5rem 12px 16px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
   border-left: 2px solid ${IDEA_ACCENT}44;
   animation: ${fadeUp} 0.2s ease both;
@@ -71,6 +81,10 @@ const IdeaRow = styled.div`
   &:hover {
     background: ${({ theme }) => theme.bgCard};
     border-left-color: ${IDEA_ACCENT}aa;
+  }
+
+  @media (pointer: fine) {
+    padding-right: 6.5rem;
   }
 `;
 
@@ -88,13 +102,13 @@ const IdeaText = styled.p`
   -webkit-box-orient: vertical;
   overflow-wrap: break-word;
   word-break: break-word;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 `;
 
 const IdeaMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
 `;
 
 const CapturedAt = styled.span`
@@ -113,18 +127,19 @@ const TagPill = styled.span`
 `;
 
 const Actions = styled.div`
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.5rem;
+  flex-shrink: 0;
   opacity: 0.7;
-  transition: opacity 0.15s;
 
   @media (pointer: fine) {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
     opacity: 0;
+    transition: opacity 0.15s;
     ${IdeaRow}:hover & { opacity: 1; }
   }
 `;
@@ -133,7 +148,7 @@ const ActionBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0.25rem;
   height: 2rem;
   padding: 0 0.6rem;
   border-radius: ${({ theme }) => theme.radiusSm};
@@ -205,11 +220,10 @@ export default function Ideas() {
         <Button type="submit" disabled={saving || !text.trim()}><Plus size={16} strokeWidth={2} /></Button>
       </CaptureBar>
 
-      {ideas.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <IdeaList>
-          {ideas.map((idea, i) => {
+      <IdeaList>
+        {ideas.length === 0 ? (
+          <EmptyState />
+        ) : ideas.map((idea, i) => {
             const tags = idea.tags?.slice(0, 3) ?? [];
             return (
               <IdeaRow key={idea.id} $i={i}>
@@ -232,7 +246,6 @@ export default function Ideas() {
             );
           })}
         </IdeaList>
-      )}
 
       {deleting && (
         <ConfirmModal

@@ -20,12 +20,12 @@ const RecordBtn = styled(Button)`
 const RecordingBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 `;
 
 const Dot = styled.span`
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
   background: ${({ theme }) => theme.danger};
   flex-shrink: 0;
@@ -36,7 +36,7 @@ const Timer = styled.span`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.85rem;
   color: ${({ theme }) => theme.text};
-  min-width: 36px;
+  min-width: 2.25rem;
 `;
 
 const LevelTrack = styled.div`
@@ -58,13 +58,13 @@ const LevelFill = styled.div`
 const AudioRow = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.625rem;
 `;
 
 const StopBtn = styled.button`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.62rem;
   font-weight: 700;
@@ -87,7 +87,7 @@ const StyledAudio = styled.audio`
 
 const ActionRow = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 `;
 
@@ -109,13 +109,13 @@ const wave = keyframes`
 const Waveform = styled.div`
   display: flex;
   align-items: center;
-  gap: 3px;
-  height: 24px;
+  gap: 0.1875rem;
+  height: 1.5rem;
 `;
 
 const WaveBar = styled.span`
   display: block;
-  width: 3px;
+  width: 0.1875rem;
   height: 100%;
   border-radius: 2px;
   background: ${({ theme }) => theme.primary};
@@ -131,7 +131,7 @@ const MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSu
 function formatTime(secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '00')}`;
 }
 
 export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }) {
@@ -344,7 +344,7 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
 
         {status === 'error' && (
           <>
-            <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: 5, verticalAlign: 'middle' }} />Recording failed. Check microphone permissions and try again.</ErrorMsg>
+            <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: '0.3125rem', verticalAlign: 'middle' }} />Recording failed. Check microphone permissions and try again.</ErrorMsg>
             <Button type="button" $variant="ghost" onClick={() => setStatus('idle')}>Try again</Button>
           </>
         )}

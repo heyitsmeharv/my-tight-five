@@ -5,7 +5,7 @@ import { Play, Pause, AlertCircle } from 'lucide-react';
 const PlayBtn = styled.button`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.62rem;
   font-weight: 700;

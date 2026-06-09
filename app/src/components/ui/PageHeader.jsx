@@ -5,8 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background: ${({ theme }) => theme.bg};
   position: sticky;
@@ -38,8 +38,9 @@ const Title = styled.h1`
 
 const Actions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.375rem;
   align-items: center;
+  flex-shrink: 0;
 `;
 
 export default function PageHeader({ title, back, onBack, actions }) {

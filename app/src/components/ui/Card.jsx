@@ -5,7 +5,7 @@ const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius};
   box-shadow: ${({ theme }) => theme.shadow};
-  padding: ${({ $compact }) => $compact ? '12px' : '16px'};
+  padding: ${({ $compact }) => $compact ? '0.75rem' : '1rem'};
 `;
 
 export default Card;

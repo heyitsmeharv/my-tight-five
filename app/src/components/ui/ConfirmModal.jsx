@@ -10,14 +10,14 @@ const Overlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 24px;
+  padding: 1.5rem;
 `;
 
 const Modal = styled.div`
   background: ${({ theme }) => theme.bgCard};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 24px;
-  max-width: 360px;
+  padding: 1.5rem;
+  max-width: 22.5rem;
   width: 100%;
   box-shadow: ${({ theme }) => theme.shadowMd};
   outline: none;
@@ -25,18 +25,18 @@ const Modal = styled.div`
 
 const Title = styled.h3`
   font-size: 1rem;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 `;
 
 const Message = styled.p`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 `;
 
 const Actions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   justify-content: flex-end;
 `;
 

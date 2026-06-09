@@ -25,7 +25,7 @@ const NavItem = styled(NavLink)`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 0.1875rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.6rem;
   font-weight: 700;

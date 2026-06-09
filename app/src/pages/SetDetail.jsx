@@ -32,23 +32,28 @@ import { STAGE_COLOR } from '../utils/stages';
 import { SetDetailSkeleton } from '../components/ui/Skeleton';
 
 const Page = styled.div`
-  padding-bottom: 80px;
+  padding-bottom: 5rem;
   max-width: 600px;
   margin: 0 auto;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1.5rem;
+  }
 `;
 
 const Body = styled.div`
-  padding: 16px;
+  padding: 1rem;
 `;
 
 const TimingBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
   background: ${({ theme }) => theme.bgCard};
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  font-size: 0.88rem;
+  font-size: 0.85rem;
+  min-width: 0;
 `;
 
 const BarTrack = styled.div`
@@ -81,9 +86,9 @@ const CallbackWarning = styled.div`
   color: ${({ theme }) => theme.warning};
   border: 1px solid ${({ theme }) => theme.warning};
   border-radius: ${({ theme }) => theme.radiusSm};
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
   font-size: 0.82rem;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 `;
 
 const JokeDuration = styled.span`
@@ -98,11 +103,11 @@ const TargetSlash = styled.span`
 const TargetBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
   color: ${({ theme }) => theme.textMuted};
   font-size: 0.88rem;
   font-family: inherit;
-  padding: 2px 6px;
+  padding: 0.125rem 0.375rem;
   border-radius: ${({ theme }) => theme.radiusSm};
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
@@ -115,17 +120,17 @@ const TargetBtn = styled.button`
 const SetTargetBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.68rem;
   font-weight: 700;
   color: ${({ theme }) => theme.accent};
   border: 1px solid ${({ theme }) => theme.accent};
   background: ${({ theme }) => theme.accentLight};
-  padding: 3px 10px;
+  padding: 0.1875rem 0.625rem;
   border-radius: 99px;
   cursor: pointer;
-  margin-left: 8px;
+  margin-left: 0.5rem;
   opacity: 0.85;
   transition: opacity 0.15s;
   &:hover { opacity: 1; }
@@ -146,7 +151,7 @@ const TargetInput = styled.input`
 
 const EmptyMsg = styled.div`
   text-align: center;
-  padding: 24px 0;
+  padding: 1.5rem 0;
   color: ${({ theme }) => theme.textMuted};
   font-size: 0.9rem;
 `;
@@ -154,7 +159,7 @@ const EmptyMsg = styled.div`
 const AddJokeEmptyMsg = styled.div`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
-  padding: 8px 0;
+  padding: 0.5rem 0;
 
   a {
     color: ${({ theme }) => theme.accent};
@@ -169,20 +174,20 @@ const JokePickMeta = styled.div`
   font-size: 0.78rem;
   color: ${({ theme }) => theme.textMuted};
   display: flex;
-  gap: 6px;
-  margin-top: 2px;
+  gap: 0.375rem;
+  margin-top: 0.125rem;
 `;
 
 const SortableItem = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
+  gap: 0.625rem;
+  padding: 0.75rem;
   background: ${({ theme }) => theme.bgCard};
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   touch-action: none;
   cursor: grab;
   opacity: ${({ $dragging }) => $dragging ? 0.5 : 1};
@@ -195,7 +200,7 @@ const SortableItem = styled.div`
 const DragHandle = styled.span`
   color: ${({ theme }) => theme.textMuted};
   flex-shrink: 0;
-  padding-top: 2px;
+  padding-top: 0.125rem;
   opacity: 0.5;
 `;
 
@@ -211,7 +216,7 @@ const JokeSetup = styled.div`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  margin-bottom: 3px;
+  margin-bottom: 0.1875rem;
 `;
 
 const JokePunchline = styled.p`
@@ -222,7 +227,7 @@ const JokePunchline = styled.p`
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 `;
 
 const JokeNotes = styled.p`
@@ -232,22 +237,22 @@ const JokeNotes = styled.p`
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  padding-left: 8px;
+  padding-left: 0.5rem;
   border-left: 2px solid ${({ theme }) => theme.border};
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 `;
 
 const JokeCallbackRow = styled.button`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
   width: 100%;
   text-align: left;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.63rem;
   color: ${({ $warning, theme }) => $warning ? theme.danger : theme.textMuted};
   opacity: 0.7;
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
   padding: 0.3rem 0;
   overflow: hidden;
   white-space: nowrap;
@@ -260,13 +265,13 @@ const JokeCallbackRow = styled.button`
 
 const JokeMeta = styled.div`
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 0.25rem;
   flex-wrap: wrap;
 `;
 
-const JokeTagRow = styled.div`display: flex; gap: 4px; flex-wrap: wrap;`;
+const JokeTagRow = styled.div`display: flex; gap: 0.25rem; flex-wrap: wrap;`;
 
 const JokeTag = styled.span`
   font-family: ${({ theme }) => theme.fontMono};
@@ -275,7 +280,7 @@ const JokeTag = styled.span`
   color: ${({ theme }) => theme.primary};
   background: ${({ theme }) => theme.primaryLight};
   border-radius: 99px;
-  padding: 1px 6px;
+  padding: 0.0625rem 0.375rem;
 `;
 
 const FooterSpacer = styled.div`flex: 1;`;
@@ -283,8 +288,8 @@ const FooterSpacer = styled.div`flex: 1;`;
 const ListenBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
   background: ${({ theme }) => theme.bgCard};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   font-size: 0.82rem;
@@ -306,14 +311,14 @@ const ListenCount = styled.span`
 `;
 
 const AddJokeSection = styled.div`
-  margin-top: 16px;
+  margin-top: 1rem;
 `;
 
 const JokePickRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 0.5rem 0;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 
   &:last-child { border-bottom: none; }
@@ -328,7 +333,7 @@ const PracticeOverlay = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: 2rem 1.5rem;
   text-align: center;
 `;
 
@@ -338,32 +343,32 @@ const TimerDisplay = styled.div`
   font-variant-numeric: tabular-nums;
   letter-spacing: -2px;
   color: ${({ $over, theme }) => $over ? theme.danger : theme.text};
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 `;
 
 const TimerTarget = styled.div`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
 `;
 
 const CurrentJoke = styled.div`
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 `;
 
 const CurrentPunchline = styled.div`
   font-size: 0.95rem;
   color: ${({ theme }) => theme.textMuted};
   font-style: italic;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 `;
 
 const NextJoke = styled.div`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 40px;
+  margin-bottom: 2.5rem;
 `;
 
 function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
@@ -453,7 +458,7 @@ export default function SetDetail() {
   }, [set]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -698,7 +703,7 @@ export default function SetDetail() {
           </Button>
 
           {showAddJokes && (
-            <Card $compact style={{ marginTop: 10 }}>
+            <Card $compact style={{ marginTop: '0.625rem' }}>
               {availableJokes.length === 0 && (
                 <AddJokeEmptyMsg>
                  There are no more available jokes - <Link to="/jokes/new">Write a new joke</Link>

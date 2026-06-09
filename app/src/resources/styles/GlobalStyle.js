@@ -10,8 +10,8 @@ const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    /* Scales from 15px on small mobile to 17px on large desktop */
-    font-size: clamp(15px, 0.5vw + 13px, 17px);
+    /* Scales from 14px on small mobile to 16px on large desktop */
+    font-size: clamp(14px, 0.5vw + 12px, 16px);
     -webkit-text-size-adjust: 100%;
   }
 
@@ -21,6 +21,7 @@ const GlobalStyle = createGlobalStyle`
     color: ${({ theme }) => theme.text};
     line-height: 1.55;
     min-height: 100dvh;
+    overflow-x: hidden;
     transition: background 0.2s, color 0.2s;
   }
 
@@ -28,6 +29,7 @@ const GlobalStyle = createGlobalStyle`
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
   }
 
   a {
@@ -66,15 +68,15 @@ const GlobalStyle = createGlobalStyle`
   /* ── Toast overrides ─────────────────────────────────────── */
   .Toastify__toast-container {
     width: auto;
-    min-width: 260px;
-    max-width: 360px;
+    min-width: 16.25rem;
+    max-width: 22.5rem;
     padding: 0;
-    top: 16px !important;
-    right: 16px !important;
+    top: 1rem !important;
+    right: 1rem !important;
 
     @media (min-width: 768px) {
-      top: 24px !important;
-      right: 24px !important;
+      top: 1.5rem !important;
+      right: 1.5rem !important;
     }
   }
 
@@ -89,8 +91,8 @@ const GlobalStyle = createGlobalStyle`
     font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    padding: 12px 16px;
-    min-height: 48px;
+    padding: 0.75rem 1rem;
+    min-height: 3rem;
   }
 
   .Toastify__toast--success {

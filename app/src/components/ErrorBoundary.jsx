@@ -9,7 +9,7 @@ const Wrap = styled.div`
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 32px 24px;
+  padding: 2rem 1.5rem;
   text-align: center;
   background: ${({ theme }) => theme.bg};
 `;
@@ -25,7 +25,7 @@ const Detail = styled.p`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.72rem;
   color: ${({ theme }) => theme.textMuted};
-  max-width: 300px;
+  max-width: 18.75rem;
   line-height: 1.5;
   margin: 0;
   opacity: 0.7;

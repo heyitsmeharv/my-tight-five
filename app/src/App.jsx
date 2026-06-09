@@ -21,15 +21,10 @@ import SetReadThrough from './pages/SetReadThrough';
 
 const Main = styled.main`
   flex: 1;
-  min-height: 100dvh;
+  min-width: 0;
 
   @media (min-width: 768px) {
-    margin-left: 200px;
-
-    /* override the mobile bottom-nav clearance set on each page */
-    & > * {
-      padding-bottom: 24px !important;
-    }
+    margin-left: 12.5rem;
   }
 `;
 
@@ -51,7 +46,7 @@ function Layout({ children }) {
 
 function NotFound() {
   return (
-    <div style={{ padding: '60px 24px', textAlign: 'center', opacity: 0.5, fontSize: '0.9rem' }}>
+    <div style={{ padding: '3.75rem 1.5rem', textAlign: 'center', opacity: 0.5, fontSize: '0.9rem' }}>
       Page not found.
     </div>
   );

@@ -11,18 +11,22 @@ const Page = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 1.5rem;
   background: ${({ theme }) => theme.bg};
 `;
 
 const Box = styled.div`
   width: 100%;
-  max-width: 360px;
+  max-width: 22.5rem;
   background: ${({ theme }) => theme.bgCard};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 32px 24px;
+  padding: 1.75rem 1.25rem;
   box-shadow: ${({ theme }) => theme.shadowMd};
+
+  @media (max-width: 400px) {
+    padding: 1.5rem 1rem;
+  }
 `;
 
 const AppName = styled.h1`
@@ -33,21 +37,21 @@ const AppName = styled.h1`
   text-transform: uppercase;
   color: ${({ theme }) => theme.primary};
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 0.25rem;
 `;
 
 const Tagline = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 1.75rem;
 `;
 
 const FooterLinks = styled.div`
-  margin-top: 16px;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.375rem;
   font-size: 0.83rem;
   color: ${({ theme }) => theme.textMuted};
 
@@ -61,8 +65,8 @@ const FooterLinks = styled.div`
 const Error = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.danger};
-  margin-top: -8px;
-  margin-bottom: 12px;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
 `;
 
 export default function Login() {

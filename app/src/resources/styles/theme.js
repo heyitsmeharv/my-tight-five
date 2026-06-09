@@ -1,8 +1,8 @@
 const shared = {
   fontMono: "'Noto Sans', system-ui, sans-serif",
   fontSans: "'Noto Sans', system-ui, sans-serif",
-  radius: '6px',
-  radiusSm: '3px',
+  radius: '0.375rem',
+  radiusSm: '0.1875rem',
 };
 
 export const darkTheme = {

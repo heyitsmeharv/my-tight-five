@@ -18,8 +18,8 @@ const Shine = styled.div`
 `;
 
 export const SkeletonLine = styled(Shine)`
-  height: ${({ $h }) => $h || 12}px;
-  width: ${({ $w }) => (typeof $w === 'number' ? `${$w}px` : $w) || '100%'};
+  height: ${({ $h }) => ($h || 12) / 16}rem;
+  width: ${({ $w }) => (typeof $w === 'number' ? `${$w / 16}rem` : $w) || '100%'};
 `;
 
 /* Single-column joke card skeleton */
@@ -28,14 +28,14 @@ const SJokeCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 14px 46px 14px 16px;
+  padding: 0.875rem 2.875rem 0.875rem 1rem;
 `;
 
 /* Idea list row skeleton */
 const SIdeaRow = styled.div`
   display: flex;
-  gap: 12px;
-  padding: 12px 12px 12px 16px;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
   border-left: 2px solid ${({ theme }) => theme.border};
 `;
@@ -45,18 +45,18 @@ const SCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius};
   background: ${({ theme }) => theme.bgCard};
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.625rem;
 `;
 
 export function JokeCardSkeleton() {
   return (
     <SJokeCard>
-      <SkeletonLine $h={15} style={{ marginBottom: 7 }} />
-      <SkeletonLine $h={15} style={{ marginBottom: 10, maxWidth: '68%' }} />
-      <SkeletonLine $h={12} style={{ marginBottom: 12, maxWidth: '88%' }} />
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <SkeletonLine $h={20} $w={54} style={{ borderRadius: 99 }} />
+      <SkeletonLine $h={15} style={{ marginBottom: '0.4375rem' }} />
+      <SkeletonLine $h={15} style={{ marginBottom: '0.625rem', maxWidth: '68%' }} />
+      <SkeletonLine $h={12} style={{ marginBottom: '0.75rem', maxWidth: '88%' }} />
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <SkeletonLine $h={20} $w={54} style={{ borderRadius: '99px' }} />
         <SkeletonLine $h={11} $w={38} />
       </div>
     </SJokeCard>
@@ -67,13 +67,13 @@ export function IdeaRowSkeleton() {
   return (
     <SIdeaRow>
       <div style={{ flex: 1 }}>
-        <SkeletonLine $h={13} style={{ marginBottom: 6 }} />
-        <SkeletonLine $h={13} style={{ marginBottom: 6, maxWidth: '80%' }} />
+        <SkeletonLine $h={13} style={{ marginBottom: '0.375rem' }} />
+        <SkeletonLine $h={13} style={{ marginBottom: '0.375rem', maxWidth: '80%' }} />
         <SkeletonLine $h={10} $w={48} />
       </div>
-      <div style={{ display: 'flex', gap: 4, paddingTop: 2 }}>
-        <SkeletonLine $h={24} $w={44} style={{ borderRadius: 3 }} />
-        <SkeletonLine $h={24} $w={24} style={{ borderRadius: 3 }} />
+      <div style={{ display: 'flex', gap: '0.25rem', paddingTop: '0.125rem' }}>
+        <SkeletonLine $h={24} $w={44} style={{ borderRadius: '0.1875rem' }} />
+        <SkeletonLine $h={24} $w={24} style={{ borderRadius: '0.1875rem' }} />
       </div>
     </SIdeaRow>
   );
@@ -83,9 +83,9 @@ export function IdeaRowSkeleton() {
 export function SetCardSkeleton() {
   return (
     <SCard>
-      <SkeletonLine $h={15} style={{ marginBottom: 8, maxWidth: '55%' }} />
-      <SkeletonLine $h={10} style={{ marginBottom: 12, maxWidth: '38%' }} />
-      <SkeletonLine $h={3} style={{ borderRadius: 2 }} />
+      <SkeletonLine $h={15} style={{ marginBottom: '0.5rem', maxWidth: '55%' }} />
+      <SkeletonLine $h={10} style={{ marginBottom: '0.75rem', maxWidth: '38%' }} />
+      <SkeletonLine $h={3} style={{ borderRadius: '2px' }} />
     </SCard>
   );
 }
@@ -98,26 +98,26 @@ const SHeader = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  height: 50px;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  height: 3.125rem;
 `;
 
 const SEditPage = styled.div`
-  padding-bottom: 80px;
+  padding-bottom: 5rem;
   max-width: 600px;
   margin: 0 auto;
 `;
 
 const SEditBody = styled.div`
-  padding: 20px 16px;
+  padding: 1.25rem 1rem;
 `;
 
 const SStageRow = styled.div`
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 `;
 
 export function JokeEditSkeleton() {
@@ -128,15 +128,15 @@ export function JokeEditSkeleton() {
         <SkeletonLine $h={16} style={{ maxWidth: '40%' }} />
       </SHeader>
       <SEditBody>
-        <SkeletonLine $h={18} style={{ marginBottom: 10 }} />
-        <SkeletonLine $h={18} style={{ marginBottom: 10, maxWidth: '75%' }} />
-        <SkeletonLine $h={18} style={{ marginBottom: 24, maxWidth: '50%' }} />
-        <SkeletonLine $h={1} style={{ marginBottom: 16 }} />
-        <SkeletonLine $h={16} style={{ marginBottom: 10 }} />
-        <SkeletonLine $h={16} style={{ marginBottom: 24, maxWidth: '60%' }} />
+        <SkeletonLine $h={18} style={{ marginBottom: '0.625rem' }} />
+        <SkeletonLine $h={18} style={{ marginBottom: '0.625rem', maxWidth: '75%' }} />
+        <SkeletonLine $h={18} style={{ marginBottom: '1.5rem', maxWidth: '50%' }} />
+        <SkeletonLine $h={1} style={{ marginBottom: '1rem' }} />
+        <SkeletonLine $h={16} style={{ marginBottom: '0.625rem' }} />
+        <SkeletonLine $h={16} style={{ marginBottom: '1.5rem', maxWidth: '60%' }} />
         <SStageRow>
           {[70, 55, 80, 60, 65].map((w, i) => (
-            <SkeletonLine key={i} $h={26} $w={w} style={{ borderRadius: 99 }} />
+            <SkeletonLine key={i} $h={26} $w={w} style={{ borderRadius: '99px' }} />
           ))}
         </SStageRow>
       </SEditBody>
@@ -145,7 +145,7 @@ export function JokeEditSkeleton() {
 }
 
 const SPage = styled.div`
-  padding-bottom: 80px;
+  padding-bottom: 5rem;
   max-width: 600px;
   margin: 0 auto;
 `;
@@ -153,37 +153,37 @@ const SPage = styled.div`
 const STimingBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.bgCard};
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
 const SBody = styled.div`
-  padding: 16px;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 `;
 
 const SJokeRow = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 0.625rem;
   align-items: flex-start;
   background: ${({ theme }) => theme.bgCard};
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 14px 16px;
+  padding: 0.875rem 1rem;
 `;
 
 function SJokeCardSkeleton() {
   return (
     <SJokeRow>
-      <SkeletonLine $h={14} $w={8} style={{ marginTop: 3, flexShrink: 0 }} />
+      <SkeletonLine $h={14} $w={8} style={{ marginTop: '0.1875rem', flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
-        <SkeletonLine $h={14} style={{ marginBottom: 7 }} />
-        <SkeletonLine $h={14} style={{ marginBottom: 10, maxWidth: '70%' }} />
+        <SkeletonLine $h={14} style={{ marginBottom: '0.4375rem' }} />
+        <SkeletonLine $h={14} style={{ marginBottom: '0.625rem', maxWidth: '70%' }} />
         <SkeletonLine $h={11} style={{ maxWidth: '88%' }} />
       </div>
     </SJokeRow>
@@ -211,8 +211,8 @@ export function SetDetailSkeleton() {
 
 const SFiltersBar = styled.div`
   display: flex;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
   overflow-x: auto;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
@@ -220,8 +220,8 @@ const SFiltersBar = styled.div`
 const SCaptureBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
@@ -233,7 +233,7 @@ const SDashHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
@@ -249,23 +249,23 @@ const SStatCard = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 8px;
-  gap: 6px;
+  padding: 1rem 0.5rem;
+  gap: 0.375rem;
   &:not(:last-child) { border-right: 1px solid ${({ theme }) => theme.border}; }
 `;
 
 const SQuickCapture = styled.div`
   display: flex;
-  gap: 10px;
-  padding: 16px;
-  margin-bottom: 8px;
+  gap: 0.625rem;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
 const SSectionHead = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 `;
 
 export function JokesPageSkeleton() {
@@ -274,11 +274,11 @@ export function JokesPageSkeleton() {
       <SHeader>
         <SkeletonLine $h={14} $w={24} style={{ flexShrink: 0 }} />
         <SkeletonLine $h={16} style={{ maxWidth: '30%' }} />
-        <SkeletonLine $h={30} $w={72} style={{ marginLeft: 'auto', borderRadius: 6, flexShrink: 0 }} />
+        <SkeletonLine $h={30} $w={72} style={{ marginLeft: 'auto', borderRadius: '0.375rem', flexShrink: 0 }} />
       </SHeader>
       <SFiltersBar>
         {[38, 52, 58, 68].map((w, i) => (
-          <SkeletonLine key={i} $h={28} $w={w} style={{ borderRadius: 99, flexShrink: 0 }} />
+          <SkeletonLine key={i} $h={28} $w={w} style={{ borderRadius: '99px', flexShrink: 0 }} />
         ))}
       </SFiltersBar>
       <SBody>
@@ -294,9 +294,9 @@ export function SetsPageSkeleton() {
       <SHeader>
         <SkeletonLine $h={14} $w={24} style={{ flexShrink: 0 }} />
         <SkeletonLine $h={16} style={{ maxWidth: '25%' }} />
-        <SkeletonLine $h={30} $w={80} style={{ marginLeft: 'auto', borderRadius: 6, flexShrink: 0 }} />
+        <SkeletonLine $h={30} $w={80} style={{ marginLeft: 'auto', borderRadius: '0.375rem', flexShrink: 0 }} />
       </SHeader>
-      <div style={{ padding: 16 }}>
+      <div style={{ padding: '1rem' }}>
         {[0, 1, 2].map(i => <SetCardSkeleton key={i} />)}
       </div>
     </SPage>
@@ -312,7 +312,7 @@ export function IdeasPageSkeleton() {
       </SHeader>
       <SCaptureBar>
         <SkeletonLine $h={36} style={{ flex: 1 }} />
-        <SkeletonLine $h={36} $w={36} style={{ flexShrink: 0, borderRadius: 6 }} />
+        <SkeletonLine $h={36} $w={36} style={{ flexShrink: 0, borderRadius: '0.375rem' }} />
       </SCaptureBar>
       <SIdeaList>
         {[0, 1, 2, 3].map(i => <IdeaRowSkeleton key={i} />)}
@@ -331,16 +331,16 @@ const STopBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 0.75rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  height: 49px;
+  height: 3.0625rem;
 `;
 
 const SReadContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px 24px;
+  padding: 2rem 1.5rem;
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
@@ -348,8 +348,8 @@ const SReadContent = styled.div`
 
 const SReadNav = styled.div`
   display: flex;
-  gap: 12px;
-  padding-top: 24px;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
   margin-top: auto;
 `;
 
@@ -359,16 +359,16 @@ export function SetReadThroughSkeleton() {
       <STopBar>
         <SkeletonLine $h={14} $w={130} />
         <SkeletonLine $h={12} $w={36} />
-        <SkeletonLine $h={24} $w={24} style={{ borderRadius: 4 }} />
+        <SkeletonLine $h={24} $w={24} style={{ borderRadius: '0.25rem' }} />
       </STopBar>
       <SReadContent>
-        <SkeletonLine $h={12} $w={52} style={{ marginBottom: 20, borderRadius: 99 }} />
-        <SkeletonLine $h={28} style={{ marginBottom: 12 }} />
-        <SkeletonLine $h={28} style={{ marginBottom: 24, maxWidth: '72%' }} />
+        <SkeletonLine $h={12} $w={52} style={{ marginBottom: '1.25rem', borderRadius: '99px' }} />
+        <SkeletonLine $h={28} style={{ marginBottom: '0.75rem' }} />
+        <SkeletonLine $h={28} style={{ marginBottom: '1.5rem', maxWidth: '72%' }} />
         <SkeletonLine $h={14} $w={110} />
         <SReadNav>
-          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: 6 }} />
-          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: 6 }} />
+          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
+          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
         </SReadNav>
       </SReadContent>
     </SReadPage>
@@ -380,9 +380,9 @@ export function DashboardSkeleton() {
     <SPage>
       <SDashHeader>
         <SkeletonLine $h={18} $w={110} />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <SkeletonLine $h={30} $w={52} style={{ borderRadius: 6 }} />
-          <SkeletonLine $h={30} $w={72} style={{ borderRadius: 6 }} />
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <SkeletonLine $h={30} $w={52} style={{ borderRadius: '0.375rem' }} />
+          <SkeletonLine $h={30} $w={72} style={{ borderRadius: '0.375rem' }} />
         </div>
       </SDashHeader>
       <SStatRow>
@@ -395,14 +395,14 @@ export function DashboardSkeleton() {
       </SStatRow>
       <SQuickCapture>
         <SkeletonLine $h={38} style={{ flex: 1 }} />
-        <SkeletonLine $h={38} $w={38} style={{ flexShrink: 0, borderRadius: 6 }} />
+        <SkeletonLine $h={38} $w={38} style={{ flexShrink: 0, borderRadius: '0.375rem' }} />
       </SQuickCapture>
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 1rem' }}>
         <SSectionHead>
           <SkeletonLine $h={14} $w={90} />
           <SkeletonLine $h={14} $w={28} />
         </SSectionHead>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
           {[0, 1, 2].map(i => <JokeCardSkeleton key={i} />)}
         </div>
       </div>

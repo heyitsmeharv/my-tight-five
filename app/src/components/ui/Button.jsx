@@ -36,14 +36,14 @@ const variants = {
 const Button = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: ${({ $size }) => $size === 'sm' ? '6px 14px' : '10px 20px'};
+  gap: 0.375rem;
+  padding: ${({ $size }) => $size === 'sm' ? '0.375rem 0.875rem' : '0.625rem 1.25rem'};
   font-family: ${({ theme }) => theme.fontMono};
   font-size: ${({ $size }) => $size === 'sm' ? '0.78rem' : '0.85rem'};
   letter-spacing: 0.05em;
   border-radius: ${({ theme }) => theme.radiusSm};
   transition: background 0.15s, opacity 0.15s, color 0.15s, border-color 0.15s;
-  min-height: ${({ $size }) => $size === 'sm' ? '36px' : '44px'};
+  min-height: ${({ $size }) => $size === 'sm' ? '2.25rem' : '2.75rem'};
   white-space: nowrap;
   text-transform: uppercase;
   ${({ $variant }) => variants[$variant || 'primary']}
@@ -59,8 +59,8 @@ const Button = styled.button`
     opacity: 0.75;
     &::before {
       content: '';
-      width: 10px;
-      height: 10px;
+      width: 0.625rem;
+      height: 0.625rem;
       border: 1.5px solid currentColor;
       border-right-color: transparent;
       border-radius: 50%;

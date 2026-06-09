@@ -16,7 +16,7 @@ const TopBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 0.75rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
@@ -31,7 +31,7 @@ const CloseBtn = styled.button`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.textMuted};
-  padding: 4px;
+  padding: 0.25rem;
   transition: color 0.15s;
   &:hover { color: ${({ theme }) => theme.text}; }
 `;
@@ -45,10 +45,14 @@ const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px 24px;
+  padding: 1.5rem 1.25rem;
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
+
+  @media (max-width: 400px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 const JokeNumber = styled.div`
@@ -57,14 +61,18 @@ const JokeNumber = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: ${({ theme }) => theme.primary};
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 `;
 
 const Setup = styled.h2`
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 24px;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 400px) {
+    font-size: 1.1rem;
+  }
 `;
 
 const PunchlineToggle = styled.button`
@@ -73,7 +81,7 @@ const PunchlineToggle = styled.button`
   text-decoration: underline;
   padding: 0;
   cursor: pointer;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
   text-align: left;
 `;
 
@@ -82,22 +90,22 @@ const Punchline = styled.p`
   line-height: 1.5;
   color: ${({ theme }) => theme.text};
   border-left: 3px solid ${({ theme }) => theme.primary};
-  padding-left: 16px;
-  margin-bottom: 24px;
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
 `;
 
 const Notes = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
   font-style: italic;
 `;
 
 const Nav = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 1.5rem;
 `;
 
 const NavBtn = styled.button`
@@ -105,12 +113,12 @@ const NavBtn = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 14px;
+  gap: 0.375rem;
+  padding: 0.875rem;
   border-radius: ${({ theme }) => theme.radiusSm};
   font-size: 0.9rem;
   font-weight: 600;
-  min-height: 48px;
+  min-height: 3rem;
   cursor: pointer;
   border: 1px solid ${({ $primary, theme }) => $primary ? theme.primary : theme.border};
   background: ${({ $primary, theme }) => $primary ? theme.primary : 'transparent'};
@@ -122,7 +130,7 @@ const NavBtn = styled.button`
 const CallbackNote = styled.div`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.warning};
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 `;
 
 export default function SetReadThrough() {

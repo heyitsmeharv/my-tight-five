@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Wrap = styled.nav`
-  width: 200px;
+  width: 12.5rem;
   min-height: 100dvh;
   background: ${({ theme }) => theme.bgCard};
   border-right: 1px solid ${({ theme }) => theme.border};
@@ -14,7 +14,7 @@ const Wrap = styled.nav`
   left: 0;
   display: none;
   flex-direction: column;
-  padding: 28px 0 20px;
+  padding: 1.75rem 0 1.25rem;
   z-index: 50;
 
   @media (min-width: 768px) {
@@ -23,9 +23,9 @@ const Wrap = styled.nav`
 `;
 
 const Brand = styled.div`
-  padding: 0 20px 20px;
+  padding: 0 1.25rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.78rem;
   font-weight: 700;
@@ -38,15 +38,15 @@ const NavItems = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 10px;
-  gap: 2px;
+  padding: 0 0.625rem;
+  gap: 0.125rem;
 `;
 
 const NavItem = styled(NavLink)`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 0.625rem;
+  padding: 0.5625rem 0.625rem;
   border-radius: ${({ theme }) => theme.radiusSm};
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.78rem;
@@ -71,18 +71,18 @@ const NavItem = styled(NavLink)`
 `;
 
 const Footer = styled.div`
-  padding: 12px 10px 0;
+  padding: 0.75rem 0.625rem 0;
   border-top: 1px solid ${({ theme }) => theme.border};
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.125rem;
 `;
 
 const FooterBtn = styled.button`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 0.625rem;
+  padding: 0.5625rem 0.625rem;
   border-radius: ${({ theme }) => theme.radiusSm};
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.78rem;

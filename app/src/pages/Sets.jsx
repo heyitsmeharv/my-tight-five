@@ -19,20 +19,31 @@ const fadeIn = keyframes`
 `;
 
 const Page = styled.div`
-  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   max-width: 600px;
   margin: 0 auto;
+  overflow: hidden;
 `;
 
 const Body = styled.div`
-  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem;
+  padding-bottom: 5rem;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1rem;
+  }
 `;
 
 const SetCard = styled(Card)`
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
-  padding: 20px 2.75rem 24px 24px;
+  padding: 1.25rem 2.75rem 1.5rem 1.5rem;
   animation: ${fadeIn} 0.22s ease both;
   animation-delay: ${({ $i }) => Math.min($i * 50, 250)}ms;
   transition: border-color 0.15s;
@@ -54,7 +65,7 @@ const DeleteBtn = styled(Button)`
 
 const SetName = styled.div`
   font-weight: 600;
-  margin-bottom: 3px;
+  margin-bottom: 0.1875rem;
 `;
 
 const SetMeta = styled.div`
@@ -70,7 +81,7 @@ const ProgressTrack = styled.div`
   height: 3px;
   background: ${({ theme }) => theme.border};
   border-radius: 2px;
-  margin-top: 8px;
+  margin-top: 0.5rem;
   overflow: hidden;
 `;
 
@@ -145,7 +156,7 @@ export default function Sets() {
       />
       <Body>
         {showForm && (
-          <Card style={{ marginBottom: 16 }}>
+          <Card style={{ marginBottom: '1rem' }}>
             <form onSubmit={handleCreate}>
               <FormGroup>
                 <Label>Set name *</Label>
@@ -155,7 +166,7 @@ export default function Sets() {
                 <Label>Target duration</Label>
                 <Input type="text" placeholder="e.g. 5:00 or 300s" value={target} onChange={e => setTarget(e.target.value)} />
               </FormGroup>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button type="button" $variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Button>
                 <Button type="submit" disabled={saving} style={{ flex: 1 }}>Create</Button>
               </div>

@@ -21,19 +21,32 @@ const fadeUp = keyframes`
 `;
 
 const Page = styled.div`
-  padding: 24px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   max-width: 600px;
   margin: 0 auto;
+  padding-top: 1.25rem;
+  overflow: hidden;
+
+  @media (max-width: 400px) {
+    padding-top: 0.875rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 32px;
+  padding: 0 1rem;
+  margin-bottom: 2rem;
 
   @media (min-width: 768px) {
     display: none;
+  }
+
+  @media (max-width: 400px) {
+    padding: 0 0.75rem;
   }
 `;
 
@@ -48,19 +61,23 @@ const AppTitle = styled.h1`
 
 const HeaderActions = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
 `;
 
 const QuickCapture = styled.form`
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 36px;
+  gap: 0.625rem;
+  margin: 0 1rem 1.75rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  padding-bottom: 4px;
+  padding-bottom: 0.25rem;
   transition: border-color 0.15s;
 
   &:focus-within { border-color: ${({ theme }) => theme.primary}; }
+
+  @media (max-width: 400px) {
+    margin: 0 0.75rem 1.75rem;
+  }
 `;
 
 const QuickInput = styled.input`
@@ -69,8 +86,8 @@ const QuickInput = styled.input`
   border: none;
   color: ${({ theme }) => theme.text};
   font-size: 1rem;
-  padding: 8px 0;
-  min-height: 40px;
+  padding: 0.5rem 0;
+  min-height: 2.5rem;
 
   &:focus { outline: none; }
   &::placeholder { color: ${({ theme }) => theme.textMuted}; }
@@ -84,12 +101,16 @@ const StatRow = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radiusSm};
   overflow: hidden;
-  margin-bottom: 36px;
+  margin: 0 1rem 1.75rem;
+
+  @media (max-width: 400px) {
+    margin: 0 0.75rem 1.75rem;
+  }
 `;
 
 const StatCard = styled.div`
   background: ${({ theme }) => theme.bgCard};
-  padding: 14px 10px;
+  padding: 0.875rem 0.625rem;
   text-align: center;
 `;
 
@@ -112,18 +133,23 @@ const StatLabel = styled.div`
   color: ${({ theme }) => theme.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-top: 4px;
+  margin-top: 0.25rem;
 `;
 
 const Section = styled.div`
-  margin-bottom: 28px;
+  margin-bottom: 1.25rem;
 `;
 
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  padding: 0 1rem;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 400px) {
+    padding: 0 0.75rem;
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -136,9 +162,21 @@ const SectionTitle = styled.h2`
 `;
 
 const RecentList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 1rem;
+  padding: 0 1rem 5rem;
+
+  @media (min-width: 768px) {
+    padding-bottom: 1rem;
+  }
+
+  @media (max-width: 400px) {
+    padding: 0 0.75rem 5rem;
+  }
 `;
 
 const RecentCard = styled(Link)`
@@ -146,14 +184,14 @@ const RecentCard = styled(Link)`
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 12px 16px;
+  padding: 0.875rem 1rem;
   color: inherit;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  display: block;
   animation: ${fadeUp} 0.2s ease both;
   animation-delay: ${({ $i }) => Math.min($i * 40, 250)}ms;
   transition: border-color 0.15s, box-shadow 0.15s;
+
+  & > * + * { margin-top: 0.375rem; }
 
   &:hover {
     border-color: ${({ $color }) => $color ?? 'transparent'};
@@ -165,38 +203,40 @@ const RecentSetup = styled.p`
   font-size: 0.92rem;
   line-height: 1.45;
   overflow: hidden;
-  display: -webkit-box;
+  max-height: calc(1.45em * 2);
   -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-clamp: 2;
 `;
 
 const RecentPunchline = styled.p`
   font-size: 0.82rem;
   line-height: 1.4;
   overflow: hidden;
-  display: -webkit-box;
   -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  line-clamp: 1;
   color: ${({ theme }) => theme.textMuted};
   font-style: italic;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `;
 
 const RecentNotes = styled.p`
   font-size: 0.76rem;
   line-height: 1.4;
   overflow: hidden;
-  display: -webkit-box;
   -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  line-clamp: 1;
   color: ${({ theme }) => theme.textMuted};
-  padding-left: 8px;
+  padding-left: 0.5rem;
   border-left: 2px solid ${({ theme }) => theme.border};
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `;
 
 const RecentCallback = styled.button`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.3125rem;
   width: 100%;
   text-align: left;
   font-family: ${({ theme }) => theme.fontMono};
@@ -219,7 +259,7 @@ const RecentCallback = styled.button`
 const RecentFooter = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 `;
 
@@ -231,7 +271,7 @@ const RecentDuration = styled.span`
 
 const RecentTagRow = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
   flex-wrap: wrap;
 `;
 
@@ -242,7 +282,7 @@ const RecentTag = styled.span`
   color: ${({ theme }) => theme.primary};
   background: ${({ theme }) => theme.primaryLight};
   border-radius: 99px;
-  padding: 1px 6px;
+  padding: 0.0625rem 0.375rem;
 `;
 
 const RecentTime = styled.span`
@@ -257,7 +297,7 @@ const RecentSpacer = styled.div`flex: 1;`;
 const EmptyNote = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
-  padding: 4px 0;
+  padding: 0.25rem 0;
 `;
 
 export default function Dashboard() {
@@ -329,7 +369,7 @@ export default function Dashboard() {
       </QuickCapture>
 
       {recentJokes.length !== 0 && (
-        <Section>
+        <>
           <SectionHeader>
             <SectionTitle>Recent Jokes</SectionTitle>
             <Button $variant="link" $size="sm" onClick={() => navigate('/jokes')}>All</Button>
@@ -371,7 +411,7 @@ export default function Dashboard() {
               );
             })}
           </RecentList>
-        </Section>
+        </>
       )}
     </Page>
   );
