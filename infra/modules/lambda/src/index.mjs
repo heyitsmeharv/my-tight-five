@@ -7,11 +7,18 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { CognitoJwtVerifier } from 'aws-jwt-verify';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
 const TABLE = process.env.TABLE_NAME;
 const AUDIO_BUCKET = process.env.AUDIO_BUCKET;
+
+const verifier = CognitoJwtVerifier.create({
+  userPoolId: process.env.USER_POOL_ID,
+  clientId: process.env.CLIENT_ID,
+  tokenUse: 'id',
+});
 
 const ALLOWED_ORIGINS = [
   'https://mytightfive.co.uk',
@@ -23,7 +30,7 @@ function corsHeaders(origin) {
   if (!ALLOWED_ORIGINS.includes(origin)) return {};
   return {
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE',
     'Access-Control-Allow-Headers': 'content-type,authorization',
     'Access-Control-Max-Age': '86400',
   };
@@ -50,10 +57,17 @@ export async function handler(event) {
   const origin = event.headers?.origin ?? '';
   const method = event.requestContext?.http?.method;
 
-  const userId = event.requestContext?.authorizer?.jwt?.claims?.sub;
-  if (!userId) return respond(401, { error: 'Unauthorized' }, origin);
-  const PK = `USER#${userId}`;
+  const authHeader = event.headers?.authorization ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let userId;
+  try {
+    const claims = await verifier.verify(token);
+    userId = claims.sub;
+  } catch {
+    return respond(401, { error: 'Unauthorized' }, origin);
+  }
 
+  const PK = `USER#${userId}`;
   const path = event.rawPath || '';
   const segments = path.replace(/^\//, '').split('/');
   const resource = segments[0];

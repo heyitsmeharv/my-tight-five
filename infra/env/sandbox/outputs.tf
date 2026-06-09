@@ -19,8 +19,8 @@ output "frontend_distribution_url" {
 }
 
 output "api_url" {
-  description = "API base URL - injected as VITE_API_URL during the frontend build"
-  value       = module.api_gateway.api_url
+  description = "Lambda function URL - injected as VITE_API_URL during the frontend build"
+  value       = module.lambda.function_url
 }
 
 output "cognito_user_pool_id" {

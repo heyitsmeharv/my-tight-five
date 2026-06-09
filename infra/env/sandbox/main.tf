@@ -26,17 +26,6 @@ module "audio_bucket" {
   }]
 }
 
-module "lambda" {
-  source = "../../modules/lambda"
-
-  project            = var.project
-  environment        = var.environment
-  table_name         = module.dynamodb.table_name
-  dynamodb_table_arn = module.dynamodb.table_arn
-  audio_bucket_name  = module.audio_bucket.bucket_name
-  audio_bucket_arn   = module.audio_bucket.bucket_arn
-}
-
 module "cognito" {
   source = "../../modules/cognito"
 
@@ -44,38 +33,22 @@ module "cognito" {
   environment = var.environment
 }
 
-module "api_cert" {
-  source = "../../modules/acm"
-
-  project         = var.project
-  environment     = var.environment
-  domain_name     = "api.${var.domain}"
-  route53_zone_id = data.aws_route53_zone.this.zone_id
-}
-
-module "api_gateway" {
-  source = "../../modules/api_gateway"
+module "lambda" {
+  source = "../../modules/lambda"
 
   project              = var.project
   environment          = var.environment
-  domain               = var.domain
-  certificate_arn      = module.api_cert.certificate_arn
+  table_name           = module.dynamodb.table_name
+  dynamodb_table_arn   = module.dynamodb.table_arn
+  audio_bucket_name    = module.audio_bucket.bucket_name
+  audio_bucket_arn     = module.audio_bucket.bucket_arn
   cognito_user_pool_id = module.cognito.user_pool_id
   cognito_client_id    = module.cognito.user_pool_client_id
-  lambda_invoke_arn    = module.lambda.invoke_arn
-  lambda_function_name = module.lambda.function_name
-  aws_region           = var.aws_region
-}
-
-# Route 53 alias record for api.domain.com
-module "api_dns" {
-  source = "../../modules/route53"
-
-  zone_id               = data.aws_route53_zone.this.zone_id
-  names                 = ["api.${var.domain}"]
-  target_domain_name    = module.api_gateway.api_domain_name
-  target_hosted_zone_id = module.api_gateway.api_hosted_zone_id
-  create_ipv6_records   = false
+  cors_allow_origins   = [
+    "https://${var.domain}",
+    "https://www.${var.domain}",
+    "http://localhost:5173",
+  ]
 }
 
 module "frontend_cert" {
