@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ulid } from 'ulid';
 import styled from 'styled-components';
 import { toast } from 'react-toastify';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
@@ -214,6 +215,7 @@ export default function JokeEdit() {
     document.title = `${isNew ? 'New Joke' : 'Edit Joke'} | My Tight Five`;
   }, [isNew]);
 
+  const pendingIdRef = useRef(isNew ? ulid() : null);
   const setupRef = useRef(null);
   const punchlineRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -289,7 +291,7 @@ export default function JokeEdit() {
         callback_to: form.callback_to || null,
       };
       if (isNew) {
-        await create(data);
+        await create({ ...data, id: pendingIdRef.current });
       } else {
         await update(id, data);
       }
@@ -380,14 +382,12 @@ export default function JokeEdit() {
           />
         </TagArea>
 
-        {!isNew && (
-          <AudioRecorder
-            jokeId={id}
-            audioUrl={form.audio_url}
-            onChange={url => set('audio_url', url)}
-            onDuration={secs => set('duration_seconds', secs)}
-          />
-        )}
+        <AudioRecorder
+          jokeId={isNew ? pendingIdRef.current : id}
+          audioUrl={form.audio_url}
+          onChange={url => set('audio_url', url)}
+          onDuration={secs => set('duration_seconds', secs)}
+        />
 
         <DetailsToggle type="button" onClick={() => setShowDetails(v => !v)}>
           {showDetails ? <ChevronDown size={14} strokeWidth={2.5} /> : <ChevronRight size={14} strokeWidth={2.5} />}
