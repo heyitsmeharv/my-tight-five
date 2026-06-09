@@ -36,7 +36,7 @@ A personal toolkit for stand-up comedians - write jokes, build sets, capture ide
 | Service                | Role                                                          |
 |------------------------|---------------------------------------------------------------|
 | **Cognito**            | User auth (sign up, sign in, JWT)                             |
-| **API Gateway** (HTTP) | JWT-authorised REST API                                       |
+| **API Gateway** (REST) | Cognito-authorised REST API with CORS gateway responses       |
 | **Lambda** (Node.js)   | Single-function handler for all routes                        |
 | **DynamoDB**           | Single-table store - jokes, sets, ideas per user              |
 | **S3**                 | Audio recordings (pre-signed upload/download URLs)            |

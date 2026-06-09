@@ -68,23 +68,8 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      TABLE_NAME    = var.table_name
-      AUDIO_BUCKET  = var.audio_bucket_name
-      USER_POOL_ID  = var.cognito_user_pool_id
-      CLIENT_ID     = var.cognito_client_id
+      TABLE_NAME   = var.table_name
+      AUDIO_BUCKET = var.audio_bucket_name
     }
-  }
-}
-
-resource "aws_lambda_function_url" "api" {
-  function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE"
-
-  cors {
-    allow_credentials = false
-    allow_origins     = var.cors_allow_origins
-    allow_methods     = ["GET", "POST", "PUT", "DELETE"]
-    allow_headers     = ["content-type", "authorization"]
-    max_age           = 86400
   }
 }
