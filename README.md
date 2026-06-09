@@ -142,9 +142,9 @@ The workflow assumes an OIDC role `GitHubOIDCTerraformRole` was created by the b
 
 ## Environments
 
-| Environment | Domain | Region |
-|---|---|---|
-| sandbox | mytightfive.co.uk | eu-west-2 |
+| Environment | Domain            | Region    |
+|-------------|-------------------|-----------|
+| sandbox     | mytightfive.co.uk | eu-west-2 |
 
 ---
 
