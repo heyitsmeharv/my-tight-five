@@ -205,6 +205,17 @@ resource "aws_api_gateway_stage" "this" {
   stage_name    = var.environment
 }
 
+resource "aws_api_gateway_method_settings" "throttle" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  stage_name  = aws_api_gateway_stage.this.stage_name
+  method_path = "*/*"
+
+  settings {
+    throttling_burst_limit = 50
+    throttling_rate_limit  = 20
+  }
+}
+
 resource "aws_api_gateway_domain_name" "this" {
   domain_name              = "api.${var.domain}"
   regional_certificate_arn = var.certificate_arn

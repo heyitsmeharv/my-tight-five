@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar';
 
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Ideas from './pages/Ideas';
 import Jokes from './pages/Jokes';
@@ -34,7 +35,7 @@ const Main = styled.main`
 
 function Layout({ children }) {
   const { pathname } = useLocation();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
   const hideNav = isAuthPage || pathname.endsWith('/read');
 
   return (
@@ -72,6 +73,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/ideas" element={<ProtectedRoute><Ideas /></ProtectedRoute>} />
           <Route path="/jokes" element={<ProtectedRoute><Jokes /></ProtectedRoute>} />

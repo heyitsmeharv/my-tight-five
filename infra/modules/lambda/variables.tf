@@ -22,3 +22,7 @@ variable "audio_bucket_arn" {
   type = string
 }
 
+variable "domain" {
+  type = string
+}
+

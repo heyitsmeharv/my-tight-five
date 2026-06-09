@@ -130,6 +130,7 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign in'}
           </Button>
           <FooterLinks>
+            <Link to="/forgot-password">Forgot your password?</Link>
             <Link to="/signup">Don't have an account? Sign up</Link>
           </FooterLinks>
         </form>

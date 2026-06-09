@@ -68,8 +68,9 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      TABLE_NAME   = var.table_name
-      AUDIO_BUCKET = var.audio_bucket_name
+      TABLE_NAME      = var.table_name
+      AUDIO_BUCKET    = var.audio_bucket_name
+      FRONTEND_ORIGIN = "https://${var.domain}"
     }
   }
 }

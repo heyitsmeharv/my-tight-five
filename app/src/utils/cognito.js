@@ -41,6 +41,7 @@ const ERROR_MAP = {
   CodeMismatchException: 'Incorrect verification code.',
   ExpiredCodeException: 'Verification code has expired - request a new one.',
   InvalidPasswordException: 'Password does not meet requirements (12+ chars, upper, lower, number, symbol).',
+  InvalidParameterException: 'Password does not meet requirements (12+ chars, upper, lower, number, symbol).',
   UserNotFoundException: 'No account found for that email.',
   LimitExceededException: 'Too many attempts - please wait and try again.',
 };
@@ -176,5 +177,23 @@ export async function resendConfirmationCode(email) {
   await cognitoRequest('ResendConfirmationCode', {
     ClientId: CLIENT_ID,
     Username: email.trim().toLowerCase(),
+  });
+}
+
+export async function forgotPassword(email) {
+  if (IS_DEV_MOCK) return;
+  await cognitoRequest('ForgotPassword', {
+    ClientId: CLIENT_ID,
+    Username: email.trim().toLowerCase(),
+  });
+}
+
+export async function confirmForgotPassword(email, code, newPassword) {
+  if (IS_DEV_MOCK) return;
+  await cognitoRequest('ConfirmForgotPassword', {
+    ClientId: CLIENT_ID,
+    Username: email.trim().toLowerCase(),
+    ConfirmationCode: String(code).trim(),
+    Password: newPassword,
   });
 }

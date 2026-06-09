@@ -6,6 +6,8 @@ import {
   signUp as cognitoSignUp,
   confirmSignUp as cognitoConfirmSignUp,
   resendConfirmationCode as cognitoResendCode,
+  forgotPassword as cognitoForgotPassword,
+  confirmForgotPassword as cognitoConfirmForgotPassword,
 } from '../utils/cognito';
 import { setUnauthorizedHandler } from '../utils/api';
 
@@ -54,10 +56,12 @@ export function AuthProvider({ children }) {
   const signup = useCallback((email, password, name) => cognitoSignUp(email, password, name), []);
   const confirmSignUp = useCallback((email, code) => cognitoConfirmSignUp(email, code), []);
   const resendCode = useCallback((email) => cognitoResendCode(email), []);
+  const forgotPassword = useCallback((email) => cognitoForgotPassword(email), []);
+  const confirmForgotPassword = useCallback((email, code, newPassword) => cognitoConfirmForgotPassword(email, code, newPassword), []);
 
   const value = useMemo(
-    () => ({ isAuthenticated, login, logout, signup, confirmSignUp, resendCode }),
-    [isAuthenticated, login, logout, signup, confirmSignUp, resendCode]
+    () => ({ isAuthenticated, login, logout, signup, confirmSignUp, resendCode, forgotPassword, confirmForgotPassword }),
+    [isAuthenticated, login, logout, signup, confirmSignUp, resendCode, forgotPassword, confirmForgotPassword]
   );
 
   if (loading) return null;

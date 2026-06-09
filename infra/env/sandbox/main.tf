@@ -38,6 +38,7 @@ module "lambda" {
 
   project            = var.project
   environment        = var.environment
+  domain             = var.domain
   table_name         = module.dynamodb.table_name
   dynamodb_table_arn = module.dynamodb.table_arn
   audio_bucket_name  = module.audio_bucket.bucket_name
