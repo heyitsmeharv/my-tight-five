@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Play, Square } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
@@ -80,6 +80,25 @@ const MetaDuration = styled.span`
   color: ${({ $raw, theme }) => $raw >= 120 ? theme.danger : 'inherit'};
 `;
 
+const SetPlayBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: ${({ $playing, theme }) => $playing ? theme.primary : theme.accent};
+  border: 1px solid ${({ $playing, theme }) => $playing ? theme.primary : theme.accent};
+  background: ${({ $playing, theme }) => $playing ? 'transparent' : theme.accentLight};
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  opacity: 0.9;
+  transition: all 0.15s;
+  flex-shrink: 0;
+
+  &:hover { opacity: 1; }
+`;
+
 const ProgressTrack = styled.div`
   height: 3px;
   background: ${({ theme }) => theme.border};
@@ -110,8 +129,44 @@ export default function Sets() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [playingSetId, setPlayingSetId] = useState(null);
+  const audioRef = useRef(null);
+  const playingSetIdRef = useRef(null);
 
   useEffect(() => { document.title = 'Sets | My Tight Five'; }, []);
+
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
+
+  function stopPlayback() {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    playingSetIdRef.current = null;
+    setPlayingSetId(null);
+  }
+
+  function playNext(queue, index, setId) {
+    if (playingSetIdRef.current !== setId || index >= queue.length) {
+      if (playingSetIdRef.current === setId) stopPlayback();
+      return;
+    }
+    const audio = new Audio(queue[index].audio_url);
+    audioRef.current = audio;
+    audio.onended = () => playNext(queue, index + 1, setId);
+    audio.onerror = () => playNext(queue, index + 1, setId);
+    audio.play().catch(() => playNext(queue, index + 1, setId));
+  }
+
+  function handlePlaySet(e, set) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (playingSetId === set.id) { stopPlayback(); return; }
+    stopPlayback();
+    const queue = (set.joke_ids || []).map(id => jokeMap[id]).filter(j => j?.audio_url);
+    if (!queue.length) { toast.info('No recordings in this set'); return; }
+    playingSetIdRef.current = set.id;
+    setPlayingSetId(set.id);
+    playNext(queue, 0, set.id);
+  }
 
   if (loading) return <SetsPageSkeleton />;
 
@@ -187,16 +242,26 @@ export default function Sets() {
             const targetDuration = set.target_duration_seconds;
             const over = targetDuration && duration > targetDuration;
             const jokeCount = (set.joke_ids || []).filter(jid => jokeMap[jid]).length;
+            const hasAudio = (set.joke_ids || []).some(id => jokeMap[id]?.audio_url);
+            const isPlaying = playingSetId === set.id;
 
             return (
               <SetCard key={set.id} $i={i} onClick={() => navigate(`/sets/${set.id}`)}>
                 <SetName>{set.name}</SetName>
                 <SetMeta>
                   <span>{jokeCount} joke{jokeCount !== 1 ? 's' : ''}</span>
-                  <span>
-                    <MetaDuration $raw={targetDuration ? (duration / targetDuration) * 100 : 0}>{formatDuration(duration)}</MetaDuration>
-                    {targetDuration > 0 && ` / ${formatDuration(targetDuration)}`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {hasAudio && (
+                      <SetPlayBtn $playing={isPlaying} onClick={e => handlePlaySet(e, set)} aria-label={isPlaying ? 'Stop set' : 'Play set'}>
+                        {isPlaying ? <Square size={9} fill="currentColor" strokeWidth={0} /> : <Play size={9} fill="currentColor" strokeWidth={0} />}
+                        {isPlaying ? 'STOP' : 'PLAY'}
+                      </SetPlayBtn>
+                    )}
+                    <span>
+                      <MetaDuration $raw={targetDuration ? (duration / targetDuration) * 100 : 0}>{formatDuration(duration)}</MetaDuration>
+                      {targetDuration > 0 && ` / ${formatDuration(targetDuration)}`}
+                    </span>
+                  </div>
                 </SetMeta>
                 <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(set.id); }} aria-label="Delete set">
                   <X size={14} strokeWidth={2} />
