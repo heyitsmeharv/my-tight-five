@@ -29,6 +29,13 @@ const Page = styled.div`
   padding-top: 1.25rem;
   overflow: hidden;
 
+  @media (max-width: 767px) {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding-bottom: 5rem;
+  }
+
   @media (max-width: 400px) {
     padding-top: 0.875rem;
   }
@@ -175,6 +182,12 @@ const RecentList = styled.div`
   flex-direction: column;
   gap: 1rem;
   padding: 0 1rem 5rem;
+
+  @media (max-width: 767px) {
+    overflow-y: visible;
+    flex: none;
+    padding-bottom: 0;
+  }
 
   @media (min-width: 768px) {
     padding-bottom: 1rem;
