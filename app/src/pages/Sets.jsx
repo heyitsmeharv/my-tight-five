@@ -69,6 +69,9 @@ const SetName = styled.div`
 `;
 
 const SetMeta = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 0.82rem;
   color: ${({ theme }) => theme.textMuted};
 `;
@@ -189,10 +192,10 @@ export default function Sets() {
               <SetCard key={set.id} $i={i} onClick={() => navigate(`/sets/${set.id}`)}>
                 <SetName>{set.name}</SetName>
                 <SetMeta>
+                  <span>{jokeCount} joke{jokeCount !== 1 ? 's' : ''}</span>
                   <span>
-                    {jokeCount} joke{jokeCount !== 1 ? 's' : ''} ·{' '}
                     <MetaDuration $raw={targetDuration ? (duration / targetDuration) * 100 : 0}>{formatDuration(duration)}</MetaDuration>
-                    {targetDuration && ` / ${formatDuration(targetDuration)}`}
+                    {targetDuration > 0 && ` / ${formatDuration(targetDuration)}`}
                   </span>
                 </SetMeta>
                 <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(set.id); }} aria-label="Delete set">

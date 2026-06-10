@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { toast } from 'react-toastify';
-import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack } from 'lucide-react';
+import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack, ChevronDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -318,10 +318,93 @@ const JokePickRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid ${({ theme }) => theme.border};
+  opacity: ${({ $added }) => $added ? 0.45 : 1};
+  transition: opacity 0.15s;
+`;
 
-  &:last-child { border-bottom: none; }
+const JokePickSetup = styled.div`
+  font-weight: 500;
+  font-size: 0.88rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`;
+
+const JokePickPunchline = styled.div`
+  font-size: 0.78rem;
+  color: ${({ theme }) => theme.textMuted};
+  font-style: italic;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+`;
+
+const PickSectionHeader = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.625rem 0 0.375rem;
+  transition: color 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.text}; }
+`;
+
+const PickSectionLine = styled.div`
+  flex: 1;
+  height: 1px;
+  background: ${({ theme }) => theme.border};
+`;
+
+const PickSectionCount = styled.span`
+  font-size: 0.75rem;
+  opacity: 0.5;
+`;
+
+const PickThread = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const PickThreadToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.secondary};
+  background: ${({ theme }) => theme.accent};
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+
+  svg {
+    transition: transform 0.2s ease;
+    transform: rotate(${({ $collapsed }) => $collapsed ? '-90deg' : '0deg'});
+  }
+
+  &:hover { opacity: 0.75; }
+`;
+
+const PickThreadChildren = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: 1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid ${({ theme }) => theme.border};
 `;
 
 const PracticeOverlay = styled.div`
@@ -384,8 +467,8 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
   const callbackJoke = joke.callback_to ? jokeMap?.[joke.callback_to] : null;
 
   return (
-    <SortableItem ref={setNodeRef} style={style} $dragging={isDragging} $color={color}>
-      <DragHandle {...attributes} {...listeners}><GripVertical size={16} strokeWidth={2} /></DragHandle>
+    <SortableItem ref={setNodeRef} style={style} $dragging={isDragging} $color={color} {...attributes} {...listeners}>
+      <DragHandle><GripVertical size={16} strokeWidth={2} /></DragHandle>
       <JokeInfo>
         <JokeSetup>{joke.setup || 'Untitled'}</JokeSetup>
 
@@ -397,14 +480,14 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
           <JokeNotes>{joke.notes}</JokeNotes>
         )}
 
-        {joke.callback_to && (
+        {joke.callback_to && callbackJoke && (
           <JokeCallbackRow
             $warning={callbackWarning}
             onClick={e => { e.stopPropagation(); navigate(`/jokes/${joke.callback_to}`); }}
-            title={callbackJoke?.setup || 'Jump to callback joke'}
+            title={callbackJoke.setup || 'Jump to callback joke'}
           >
             <CornerDownLeft size={10} strokeWidth={2} style={{ flexShrink: 0 }} />
-            {callbackWarning ? '⚠ out of order · ' : ''}{callbackJoke?.setup ?? '—'}
+            {callbackWarning ? '⚠ out of order · ' : ''}{callbackJoke.setup || 'Untitled'}
           </JokeCallbackRow>
         )}
 
@@ -448,6 +531,8 @@ export default function SetDetail() {
 
   const [jokeIds, setJokeIds] = useState([]);
   const [addingJoke, setAddingJoke] = useState(null);
+  const [collapsedPickGroups, setCollapsedPickGroups] = useState(new Set());
+  const [collapsedPickThreads, setCollapsedPickThreads] = useState(new Set());
 
   useEffect(() => {
     if (set) setJokeIds(set.joke_ids || []);
@@ -563,7 +648,77 @@ export default function SetDetail() {
     }
   }
 
-  const availableJokes = jokes.filter(j => !jokeIds.includes(j.id));
+  function togglePickThread(id) {
+    setCollapsedPickThreads(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function togglePickGroup(cat) {
+    setCollapsedPickGroups(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  }
+
+  const allJokeIds = new Set(jokes.map(j => j.id));
+  const pickCbMap = {};
+  jokes.forEach(j => {
+    if (j.callback_to && allJokeIds.has(j.callback_to)) {
+      (pickCbMap[j.callback_to] = pickCbMap[j.callback_to] || []).push(j);
+    }
+  });
+
+  const pickGroups = {};
+  jokes
+    .filter(j => !j.callback_to || !allJokeIds.has(j.callback_to))
+    .forEach(j => {
+      const cat = j.tags?.[0] || '';
+      (pickGroups[cat] = pickGroups[cat] || []).push(j);
+    });
+  const pickGroupKeys = Object.keys(pickGroups).sort((a, b) => {
+    if (!a && b) return 1;
+    if (a && !b) return -1;
+    return a.localeCompare(b);
+  });
+
+  function renderPickNode(joke) {
+    const children = pickCbMap[joke.id] || [];
+    const inSet = jokeIds.includes(joke.id);
+    const isThreadCollapsed = collapsedPickThreads.has(joke.id);
+    return (
+      <PickThread key={joke.id}>
+        <JokePickRow $added={inSet}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <JokePickSetup>{joke.setup?.slice(0, 70) || 'Untitled'}</JokePickSetup>
+            {joke.punchline && <JokePickPunchline>{joke.punchline}</JokePickPunchline>}
+            <JokePickMeta>
+              <StageBadge stage={joke.stage || 'draft'} />
+              {joke.duration_seconds > 0 && formatDuration(joke.duration_seconds)}
+            </JokePickMeta>
+          </div>
+          {children.length > 0 && (
+            <PickThreadToggle $collapsed={isThreadCollapsed} onClick={() => togglePickThread(joke.id)}>
+              {isThreadCollapsed && children.length}
+              <ChevronDown size={11} strokeWidth={2.5} />
+            </PickThreadToggle>
+          )}
+          {inSet
+            ? <Button $variant="ghost" $size="sm" onClick={() => removeJoke(joke.id)} disabled={addingJoke !== null}>Remove</Button>
+            : <Button $size="sm" onClick={() => addJoke(joke.id)} $loading={addingJoke === joke.id} disabled={addingJoke !== null}>Add</Button>
+          }
+        </JokePickRow>
+        {children.length > 0 && !isThreadCollapsed && (
+          <PickThreadChildren>
+            {children.map(child => renderPickNode(child))}
+          </PickThreadChildren>
+        )}
+      </PickThread>
+    );
+  }
 
   function currentJokeForTimer() {
     let elapsed = 0;
@@ -660,7 +815,7 @@ export default function SetDetail() {
       {listening && (
         <ListenBar>
           <Headphones size={13} strokeWidth={2} style={{ flexShrink: 0, opacity: 0.6 }} />
-          <ListenSetup>{jokesWithAudio[listenIdx]?.setup?.slice(0, 70) || '—'}</ListenSetup>
+          <ListenSetup>{jokesWithAudio[listenIdx]?.setup?.slice(0, 70) || '-'}</ListenSetup>
           <ListenCount>{listenIdx + 1} / {jokesWithAudio.length}</ListenCount>
           <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx - 1)} disabled={listenIdx === 0} title="Previous"><SkipBack size={13} strokeWidth={2} /></Button>
           <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx + 1)} title="Skip"><SkipForward size={13} strokeWidth={2} /></Button>
@@ -700,23 +855,34 @@ export default function SetDetail() {
 
           {showAddJokes && (
             <Card $compact style={{ marginTop: '0.625rem' }}>
-              {availableJokes.length === 0 && (
+              {jokes.length === 0 ? (
                 <AddJokeEmptyMsg>
-                 There are no more available jokes - <Link to="/jokes/new">Write a new joke</Link>
+                  No jokes yet — <Link to="/jokes/new">Write one</Link>
                 </AddJokeEmptyMsg>
-              )}
-              {availableJokes.map(j => (
-                <JokePickRow key={j.id}>
-                  <div style={{ flex: 1, fontSize: '0.88rem' }}>
-                    <div style={{ fontWeight: 500 }}>{j.setup?.slice(0, 60) || 'Untitled'}</div>
-                    <JokePickMeta>
-                      <StageBadge stage={j.stage || 'draft'} />
-                      {formatDuration(j.duration_seconds)}
-                    </JokePickMeta>
+              ) : pickGroupKeys.map(cat => {
+                const groupJokes = pickGroups[cat];
+                const label = cat || 'Uncategorized';
+                const isCollapsed = collapsedPickGroups.has(cat);
+                return (
+                  <div key={cat || '__none__'}>
+                    <PickSectionHeader onClick={() => togglePickGroup(cat)}>
+                      <ChevronDown
+                        size={11}
+                        strokeWidth={2.5}
+                        style={{
+                          transform: isCollapsed ? 'rotate(-90deg)' : 'none',
+                          transition: 'transform 0.2s ease',
+                          flexShrink: 0,
+                        }}
+                      />
+                      {label}
+                      <PickSectionLine />
+                      <PickSectionCount>{groupJokes.length}</PickSectionCount>
+                    </PickSectionHeader>
+                    {!isCollapsed && groupJokes.map(j => renderPickNode(j))}
                   </div>
-                  <Button $size="sm" onClick={() => addJoke(j.id)} $loading={addingJoke === j.id} disabled={addingJoke !== null}>Add</Button>
-                </JokePickRow>
-              ))}
+                );
+              })}
             </Card>
           )}
         </AddJokeSection>

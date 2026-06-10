@@ -28,7 +28,7 @@ resource "aws_api_gateway_resource" "proxy" {
   path_part   = "{proxy+}"
 }
 
-# OPTIONS on root — unauthenticated preflight
+# OPTIONS on root - unauthenticated preflight
 resource "aws_api_gateway_method" "options_root" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_rest_api.this.root_resource_id
@@ -75,7 +75,7 @@ resource "aws_api_gateway_integration_response" "options_root_200" {
   depends_on = [aws_api_gateway_integration.options_root]
 }
 
-# OPTIONS on {proxy+} — unauthenticated preflight
+# OPTIONS on {proxy+} - unauthenticated preflight
 resource "aws_api_gateway_method" "options_proxy" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.proxy.id
@@ -122,7 +122,7 @@ resource "aws_api_gateway_integration_response" "options_proxy_200" {
   depends_on = [aws_api_gateway_integration.options_proxy]
 }
 
-# ANY on {proxy+} — authenticated Lambda proxy
+# ANY on {proxy+} - authenticated Lambda proxy
 resource "aws_api_gateway_method" "any_proxy" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.proxy.id

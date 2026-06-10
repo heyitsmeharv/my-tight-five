@@ -332,13 +332,13 @@ export default function Jokes() {
           <CardSetup>{joke.setup || 'Untitled'}</CardSetup>
           {joke.punchline && <CardPunchline>{joke.punchline}</CardPunchline>}
           {joke.notes && <CardNotes>{joke.notes}</CardNotes>}
-          {joke.callback_to && (
+          {joke.callback_to && callbackJoke && (
             <CallbackLink
-              title={callbackJoke?.setup || 'Jump to callback joke'}
+              title={callbackJoke.setup || 'Jump to callback joke'}
               onClick={e => { e.stopPropagation(); navigate(`/jokes/${joke.callback_to}`); }}
             >
               <CornerDownLeft size={12} strokeWidth={2} style={{ flexShrink: 0 }} />
-              {callbackJoke?.setup ?? '—'}
+              {callbackJoke.setup || 'Untitled'}
             </CallbackLink>
           )}
           <CardFooter>
@@ -403,8 +403,8 @@ export default function Jokes() {
         {filtered.length === 0 ? (
           stage === 'all'
             ? <EmptyState>
-                <EmptyAction type="button" onClick={() => navigate('/jokes/new')}>Write a joke</EmptyAction>
-              </EmptyState>
+              <EmptyAction type="button" onClick={() => navigate('/jokes/new')}>Write a joke</EmptyAction>
+            </EmptyState>
             : <EmptyState message={`No ${STAGE_FILTERS.find(f => f.value === stage)?.label.toLowerCase() ?? stage} jokes.`} />
         ) : (
           <Stack>

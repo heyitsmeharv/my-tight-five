@@ -385,13 +385,13 @@ export default function Dashboard() {
                   <RecentSetup>{joke.setup || 'Untitled'}</RecentSetup>
                   {joke.punchline && <RecentPunchline>{joke.punchline}</RecentPunchline>}
                   {joke.notes && <RecentNotes>{joke.notes}</RecentNotes>}
-                  {joke.callback_to && (
+                  {joke.callback_to && callbackJoke && (
                     <RecentCallback
-                      title={callbackJoke?.setup || 'Callback joke'}
+                      title={callbackJoke.setup || 'Callback joke'}
                       onClick={e => { e.stopPropagation(); e.preventDefault(); navigate(`/jokes/${joke.callback_to}`); }}
                     >
                       <CornerDownLeft size={10} strokeWidth={2} style={{ flexShrink: 0 }} />
-                      {callbackJoke?.setup ?? '—'}
+                      {callbackJoke.setup || 'Untitled'}
                     </RecentCallback>
                   )}
                   <RecentFooter>

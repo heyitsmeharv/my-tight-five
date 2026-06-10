@@ -75,7 +75,7 @@ export default function InlinePlayer({ url }) {
 
   if (errored) {
     return (
-      <ErrBtn onClick={toggle} $playing={false} title="Playback failed — tap to retry">
+      <ErrBtn onClick={toggle} $playing={false} title="Playback failed - tap to retry">
         <AlertCircle size={13} strokeWidth={2.5} />
       </ErrBtn>
     );
