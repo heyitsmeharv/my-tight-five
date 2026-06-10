@@ -498,10 +498,10 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
           )}
           {category && <JokeCategory>{category}</JokeCategory>}
           {joke.audio_url && <FooterSpacer />}
-          {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+          {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
         </JokeMeta>
       </JokeInfo>
-      <Button $variant="ghost" $size="sm" onClick={() => onRemove(id)} aria-label="Remove joke from set"><X size={14} strokeWidth={2} /></Button>
+      <Button $variant="ghost" $size="sm" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(id)} aria-label="Remove joke from set"><X size={14} strokeWidth={2} /></Button>
     </SortableItem>
   );
 }
@@ -706,6 +706,7 @@ export default function SetDetail() {
               <ChevronDown size={11} strokeWidth={2.5} />
             </PickThreadToggle>
           )}
+          {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
           {inSet
             ? <Button $variant="ghost" $size="sm" onClick={() => removeJoke(joke.id)} disabled={addingJoke !== null}>Remove</Button>
             : <Button $size="sm" onClick={() => addJoke(joke.id)} $loading={addingJoke === joke.id} disabled={addingJoke !== null}>Add</Button>

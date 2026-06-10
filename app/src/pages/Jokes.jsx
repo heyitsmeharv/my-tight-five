@@ -345,7 +345,7 @@ export default function Jokes() {
             <StageBadge stage={stageKey} />
             {joke.duration_seconds > 0 && <CardDuration>{formatDuration(joke.duration_seconds)}</CardDuration>}
             {(joke.audio_url || hasChildren) && <Spacer />}
-            {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+            {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
             {hasChildren && (
               <ThreadToggle $collapsed={isCollapsed} onClick={e => toggleCollapse(joke.id, e)}>
                 {isCollapsed && children.length}

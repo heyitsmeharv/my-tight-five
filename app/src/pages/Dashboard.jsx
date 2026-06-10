@@ -399,7 +399,7 @@ export default function Dashboard() {
                     {joke.duration_seconds > 0 && <RecentDuration>{formatDuration(joke.duration_seconds)}</RecentDuration>}
                     <RecentTime>{relativeTime(joke.created_at)}</RecentTime>
                     {joke.audio_url && <RecentSpacer />}
-                    {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+                    {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
                   </RecentFooter>
                 </RecentCard>
               );
