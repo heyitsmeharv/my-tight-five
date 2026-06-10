@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Mic, StopCircle, Trash2, AlertCircle } from 'lucide-react';
 import { getAudioUploadUrl } from '../utils/api';
@@ -134,8 +134,18 @@ function formatTime(secs) {
   return `${m}:${String(s).padStart(2, '00')}`;
 }
 
-export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }) {
+const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onChange, onDuration, onStatusChange }, ref) {
   const [status, setStatus] = useState(audioUrl ? 'done' : 'idle');
+
+  function applyStatus(next) {
+    setStatus(next);
+    onStatusChange?.(next);
+  }
+
+  useImperativeHandle(ref, () => ({
+    upload: handleUpload,
+  }));
+
   const [localUrl, setLocalUrl] = useState(null);
   const [audioReady, setAudioReady] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -153,7 +163,7 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
   const audioCtxRef = useRef(null);
 
   useEffect(() => {
-    if (audioUrl && status === 'idle') setStatus('done');
+    if (audioUrl && status === 'idle') applyStatus('done');
   }, [audioUrl, status]);
 
   useEffect(() => {
@@ -227,7 +237,7 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
   }
 
   async function startRecording() {
-    setStatus('requesting');
+    applyStatus('requesting');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -246,7 +256,7 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
         const url = URL.createObjectURL(blob);
         localUrlRef.current = url;
         setLocalUrl(url);
-        setStatus('recorded');
+        applyStatus('recorded');
         stream.getTracks().forEach(t => t.stop());
         onDuration?.(durationSecs);
       };
@@ -254,10 +264,10 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
       mr.start();
       startTimeRef.current = Date.now();
       startFeedback(stream);
-      setStatus('recording');
+      applyStatus('recording');
     } catch {
       streamRef.current?.getTracks().forEach(t => t.stop());
-      setStatus('error');
+      applyStatus('error');
     }
   }
 
@@ -266,14 +276,16 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
   }
 
   async function handleUpload() {
-    setStatus('uploading');
+    applyStatus('uploading');
     try {
       const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(jokeId, MIME_TYPE);
       await fetch(uploadUrl, { method: 'PUT', body: blobRef.current, headers: { 'Content-Type': MIME_TYPE } });
       onChange(newAudioUrl);
-      setStatus('done');
+      applyStatus('done');
+      return newAudioUrl;
     } catch {
-      setStatus('error');
+      applyStatus('error');
+      throw new Error('Upload failed');
     }
   }
 
@@ -282,12 +294,12 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
     localUrlRef.current = null;
     setLocalUrl(null);
     blobRef.current = null;
-    setStatus('idle');
+    applyStatus('idle');
   }
 
   function deleteRecording() {
     onChange(null);
-    setStatus('idle');
+    applyStatus('idle');
   }
 
   return (
@@ -345,10 +357,12 @@ export default function AudioRecorder({ jokeId, audioUrl, onChange, onDuration }
         {status === 'error' && (
           <>
             <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: '0.3125rem', verticalAlign: 'middle' }} />Recording failed. Check microphone permissions and try again.</ErrorMsg>
-            <Button type="button" $variant="ghost" onClick={() => setStatus('idle')}>Try again</Button>
+            <Button type="button" $variant="ghost" onClick={() => applyStatus('idle')}>Try again</Button>
           </>
         )}
       </AudioRow>
     </FormGroup>
   );
-}
+});
+
+export default AudioRecorder;

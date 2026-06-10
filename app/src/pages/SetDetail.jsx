@@ -8,6 +8,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -188,7 +189,6 @@ const SortableItem = styled.div`
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
   margin-bottom: 0.5rem;
-  touch-action: none;
   cursor: grab;
   opacity: ${({ $dragging }) => $dragging ? 0.5 : 1};
   transition: box-shadow 0.15s;
@@ -540,6 +540,7 @@ export default function SetDetail() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 

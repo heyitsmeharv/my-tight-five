@@ -39,7 +39,7 @@ const Header = styled.div`
   align-items: baseline;
   justify-content: space-between;
   padding: 0 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 
   @media (min-width: 768px) {
     display: none;
@@ -47,6 +47,7 @@ const Header = styled.div`
 
   @media (max-width: 400px) {
     padding: 0 0.75rem;
+    margin-bottom: 1rem;
   }
 `;
 
@@ -68,7 +69,7 @@ const QuickCapture = styled.form`
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin: 0 1rem 1.75rem;
+  margin: 0 1rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   padding-bottom: 0.25rem;
   transition: border-color 0.15s;
@@ -76,7 +77,7 @@ const QuickCapture = styled.form`
   &:focus-within { border-color: ${({ theme }) => theme.primary}; }
 
   @media (max-width: 400px) {
-    margin: 0 0.75rem 1.75rem;
+    margin: 0 0.75rem 1rem;
   }
 `;
 
@@ -101,10 +102,10 @@ const StatRow = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radiusSm};
   overflow: hidden;
-  margin: 0 1rem 1.75rem;
+  margin: 0 1rem 1.25rem;
 
   @media (max-width: 400px) {
-    margin: 0 0.75rem 1.75rem;
+    margin: 0 0.75rem 1rem;
   }
 `;
 
@@ -112,6 +113,10 @@ const StatCard = styled.div`
   background: ${({ theme }) => theme.bgCard};
   padding: 0.875rem 0.625rem;
   text-align: center;
+
+  @media (max-width: 400px) {
+    padding: 0.625rem 0.5rem;
+  }
 `;
 
 const StatValue = styled.div`
@@ -163,6 +168,7 @@ const SectionTitle = styled.h2`
 
 const RecentList = styled.div`
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;

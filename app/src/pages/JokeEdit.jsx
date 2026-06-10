@@ -171,12 +171,16 @@ export default function JokeEdit() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [recordingStatus, setRecordingStatus] = useState('idle');
+  const [unsavedRecordingConfirm, setUnsavedRecordingConfirm] = useState(false);
+  const [uploadingSave, setUploadingSave] = useState(false);
 
   useEffect(() => {
     document.title = `${isNew ? 'New Joke' : 'Edit Joke'} | My Tight Five`;
   }, [isNew]);
 
   const pendingIdRef = useRef(isNew ? ulid() : null);
+  const audioRecorderRef = useRef(null);
   const setupRef = useRef(null);
   const punchlineRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -234,6 +238,10 @@ export default function JokeEdit() {
 
   async function handleSave() {
     if (!form.setup.trim()) return toast.error('Add a setup first');
+    if (recordingStatus === 'recorded' || recordingStatus === 'recording') {
+      setUnsavedRecordingConfirm(true);
+      return;
+    }
     setSaving(true);
     try {
       const { category, ...rest } = form;
@@ -255,6 +263,34 @@ export default function JokeEdit() {
       toast.error("Couldn't save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveWithRecording() {
+    setUploadingSave(true);
+    try {
+      const newAudioUrl = await audioRecorderRef.current.upload();
+      setUnsavedRecordingConfirm(false);
+      const { category, ...rest } = form;
+      const data = {
+        ...rest,
+        audio_url: newAudioUrl,
+        tags: category.trim() ? [category.trim().toLowerCase().replace(/^#/, '')] : [],
+        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
+        callback_to: form.callback_to || null,
+      };
+      if (isNew) {
+        await create({ ...data, id: pendingIdRef.current });
+      } else {
+        await update(id, data);
+      }
+      setIsDirty(false);
+      toast.success('Saved');
+      navigate('/jokes');
+    } catch {
+      toast.error("Couldn't save");
+    } finally {
+      setUploadingSave(false);
     }
   }
 
@@ -338,10 +374,12 @@ export default function JokeEdit() {
         </FormGroup>
 
         <AudioRecorder
+          ref={audioRecorderRef}
           jokeId={isNew ? pendingIdRef.current : id}
           audioUrl={form.audio_url}
           onChange={url => set('audio_url', url)}
           onDuration={secs => set('duration_seconds', secs)}
+          onStatusChange={setRecordingStatus}
         />
 
         <DetailsToggle type="button" onClick={() => setShowDetails(v => !v)}>
@@ -408,6 +446,22 @@ export default function JokeEdit() {
           dangerous={false}
           onConfirm={() => { setIsDirty(false); navigate('/jokes'); }}
           onCancel={() => setLeaveConfirm(false)}
+        />
+      )}
+
+      {unsavedRecordingConfirm && (
+        <ConfirmModal
+          title="Unsaved recording"
+          message="You have a recording that hasn't been uploaded yet."
+          confirmLabel="Upload & Save"
+          dangerous={false}
+          loading={uploadingSave}
+          onConfirm={handleSaveWithRecording}
+          onCancel={() => setUnsavedRecordingConfirm(false)}
+          secondaryAction={{
+            label: 'Save without recording',
+            onClick: () => { setUnsavedRecordingConfirm(false); setRecordingStatus('idle'); handleSave(); },
+          }}
         />
       )}
     </Page>

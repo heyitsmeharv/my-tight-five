@@ -37,10 +37,12 @@ const Message = styled.p`
 const Actions = styled.div`
   display: flex;
   gap: 0.5rem;
-  justify-content: flex-end;
+  ${({ $stacked }) => $stacked
+    ? 'flex-direction: column;'
+    : 'justify-content: flex-end;'}
 `;
 
-export default function ConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = 'Delete', dangerous = true, loading = false }) {
+export default function ConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = 'Delete', dangerous = true, loading = false, secondaryAction }) {
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -75,9 +77,14 @@ export default function ConfirmModal({ title, message, onConfirm, onCancel, conf
       <Modal ref={modalRef} tabIndex={-1} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <Title id="modal-title">{title}</Title>
         <Message>{message}</Message>
-        <Actions>
-          <Button $variant="ghost" $size="sm" onClick={onCancel}>Cancel</Button>
-          <Button $variant={dangerous ? 'danger' : 'primary'} $size="sm" onClick={onConfirm} $loading={loading} disabled={loading}>{confirmLabel}</Button>
+        <Actions $stacked={!!secondaryAction}>
+          <Button $variant={dangerous ? 'danger' : 'primary'} $size="sm" onClick={onConfirm} $loading={loading} disabled={loading || secondaryAction?.loading}>{confirmLabel}</Button>
+          {secondaryAction && (
+            <Button $variant="ghost" $size="sm" onClick={secondaryAction.onClick} disabled={loading || secondaryAction.loading}>
+              {secondaryAction.label}
+            </Button>
+          )}
+          <Button $variant="ghost" $size="sm" onClick={onCancel} disabled={loading}>Cancel</Button>
         </Actions>
       </Modal>
     </Overlay>
