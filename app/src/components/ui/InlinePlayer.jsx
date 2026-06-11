@@ -1,34 +1,47 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { Play, Pause, AlertCircle } from 'lucide-react';
+import { Play, Pause, Square, AlertCircle } from 'lucide-react';
 
-const PlayBtn = styled.button`
+const Btn = styled.button`
   display: flex;
   align-items: center;
   gap: 0.3125rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.62rem;
   font-weight: 700;
-  color: ${({ $playing, theme }) => $playing ? theme.primary : theme.accent};
-  border: 1px solid ${({ $playing, theme }) => $playing ? theme.primary : theme.accent};
-  background: ${({ $playing, theme }) => $playing ? 'transparent' : theme.accentLight};
+  color: ${({ $active, theme }) => $active ? theme.primary : theme.accent};
+  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.accent};
+  background: ${({ $active, theme }) => $active ? 'transparent' : theme.accentLight};
   padding: 0.4rem 0.75rem;
   border-radius: 0.25rem;
-  opacity: ${({ $playing }) => $playing ? 1 : 0.85};
+  opacity: ${({ $active }) => $active ? 1 : 0.85};
   transition: all 0.15s;
+  flex-shrink: 0;
 
   &:hover { opacity: 1; }
 `;
 
-const ErrBtn = styled(PlayBtn)`
+const StopBtn = styled(Btn)`
+  color: ${({ theme }) => theme.textMuted};
+  border-color: ${({ theme }) => theme.border};
+  background: transparent;
+  padding: 0.4rem 0.5rem;
+`;
+
+const ErrBtn = styled(Btn)`
   color: ${({ theme }) => theme.danger};
   border-color: ${({ theme }) => theme.danger};
   background: transparent;
   opacity: 0.8;
 `;
 
+const Group = styled.span`
+  display: inline-flex;
+  gap: 0.25rem;
+`;
+
 export default function InlinePlayer({ url }) {
-  const [playing, setPlaying] = useState(false);
+  const [state, setState] = useState('idle'); // idle | playing | paused
   const [errored, setErrored] = useState(false);
   const audio = useRef(null);
 
@@ -40,51 +53,85 @@ export default function InlinePlayer({ url }) {
       audio.current.src = '';
     }
     audio.current = null;
-    setPlaying(false);
+    setState('idle');
     setErrored(false);
   }, [url]);
 
-  function toggle(e) {
+  function getAudio() {
+    if (audio.current) return audio.current;
+    const a = new Audio(url);
+    a.onended = () => setState('idle');
+    a.onerror = () => {
+      audio.current = null;
+      setErrored(true);
+      setState('idle');
+    };
+    audio.current = a;
+    return a;
+  }
+
+  function play(e) {
     e.stopPropagation();
     e.preventDefault();
     setErrored(false);
+    const a = getAudio();
+    a.play().catch(() => {
+      audio.current = null;
+      setErrored(true);
+      setState('idle');
+    });
+    setState('playing');
+  }
 
-    if (!audio.current) {
-      const a = new Audio(url);
-      a.onended = () => setPlaying(false);
-      a.onerror = () => {
-        audio.current = null;
-        setErrored(true);
-        setPlaying(false);
-      };
-      audio.current = a;
-    }
+  function pause(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    audio.current?.pause();
+    setState('paused');
+  }
 
-    if (playing) {
+  function stop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (audio.current) {
       audio.current.pause();
-      setPlaying(false);
-    } else {
-      audio.current.play().catch(() => {
-        audio.current = null;
-        setErrored(true);
-        setPlaying(false);
-      });
-      setPlaying(true);
+      audio.current.src = '';
+      audio.current = null;
     }
+    setState('idle');
   }
 
   if (errored) {
     return (
-      <ErrBtn onClick={toggle} $playing={false} title="Playback failed - tap to retry">
+      <ErrBtn onClick={play} $active={false} title="Playback failed — tap to retry">
         <AlertCircle size={13} strokeWidth={2.5} />
       </ErrBtn>
     );
   }
 
+  if (state === 'idle') {
+    return (
+      <Btn onClick={play} $active={false} title="Play recording">
+        <Play size={13} strokeWidth={2.5} />
+        PLAY
+      </Btn>
+    );
+  }
+
   return (
-    <PlayBtn onClick={toggle} $playing={playing} title={playing ? 'Pause recording' : 'Play recording'}>
-      {playing ? <Pause size={13} strokeWidth={2.5} /> : <Play size={13} strokeWidth={2.5} />}
-      {!playing && 'PLAY'}
-    </PlayBtn>
+    <Group>
+      {state === 'playing' ? (
+        <Btn onClick={pause} $active title="Pause">
+          <Pause size={13} strokeWidth={2.5} />
+        </Btn>
+      ) : (
+        <Btn onClick={play} $active={false} title="Resume">
+          <Play size={13} strokeWidth={2.5} />
+        </Btn>
+      )}
+      <StopBtn onClick={stop} $active={false} title="Stop">
+        <Square size={11} fill="currentColor" strokeWidth={0} />
+      </StopBtn>
+    </Group>
   );
 }

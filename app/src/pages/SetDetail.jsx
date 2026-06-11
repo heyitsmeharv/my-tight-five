@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack, ChevronDown } from 'lucide-react';
+import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack, ChevronDown, ChevronLeft, ChevronRight, Check, Mic, StopCircle, Trash2 } from 'lucide-react';
+import { getAudioUploadUrl, deleteAudioFile } from '../utils/api';
 import {
   DndContext,
   closestCenter,
@@ -285,6 +286,25 @@ const JokeCategory = styled.span`
 
 const FooterSpacer = styled.div`flex: 1;`;
 
+const RecordingBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  background: ${({ theme }) => theme.bgCard};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  font-size: 0.82rem;
+`;
+
+const RecordingBarLabel = styled.span`
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.textMuted};
+  flex-shrink: 0;
+`;
+
 const ListenBar = styled.div`
   display: flex;
   align-items: center;
@@ -414,17 +434,76 @@ const PracticeOverlay = styled.div`
   z-index: 200;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+`;
+
+const OverlayBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 2.5rem;
   text-align: center;
-  overflow-y: auto;
+  padding: 2rem 2.5rem;
 
   @media (max-width: 500px) {
     padding: 2rem 1.25rem;
     justify-content: flex-start;
-    padding-top: 3rem;
+    padding-top: 2.5rem;
   }
+`;
+
+const OverlayProgress = styled.div`
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.primary};
+  margin-bottom: 1rem;
+`;
+
+const ShowPunchlineBtn = styled.button`
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: ${({ theme }) => theme.textMuted};
+  text-decoration: underline;
+  padding: 0;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+`;
+
+const OverlayNav = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg};
+
+  @media (max-width: 500px) {
+    padding: 0.875rem 1.25rem;
+  }
+`;
+
+const OverlayNavBtn = styled.button`
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.875rem;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-height: 3rem;
+  cursor: pointer;
+  border: 1px solid ${({ $primary, theme }) => $primary ? theme.primary : theme.border};
+  background: ${({ $primary, theme }) => $primary ? theme.primary : 'transparent'};
+  color: ${({ $primary, theme }) => $primary ? theme.textInverse : theme.text};
+  transition: opacity 0.15s;
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
 `;
 
 const TimerDisplay = styled.div`
@@ -466,6 +545,130 @@ const NextJoke = styled.div`
   max-width: min(700px, 90vw);
   margin-bottom: 2.5rem;
   opacity: 0.7;
+`;
+
+const OverlayRecSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(480px, 90vw);
+  margin-bottom: 1.5rem;
+`;
+
+const OverlayRecLabel = styled.div`
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+`;
+
+const OverlayRecBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.5rem;
+`;
+
+const PracticeRecBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.textMuted};
+  border: 1px solid ${({ theme }) => theme.border};
+  background: transparent;
+  padding: 0.5rem 1rem;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s, border-color 0.15s;
+  &:hover { color: ${({ theme }) => theme.text}; border-color: ${({ theme }) => theme.textMuted}; }
+`;
+
+const SET_MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+  ? 'audio/webm'
+  : 'audio/mp4';
+
+const recPulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+`;
+
+const SetRecSection = styled.div`
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+`;
+
+const SetRecLabel = styled.div`
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 0.625rem;
+`;
+
+const SetRecBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+`;
+
+const RecDot = styled.span`
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.danger};
+  flex-shrink: 0;
+  animation: ${recPulse} 1.2s ease-in-out infinite;
+`;
+
+const RecTrack = styled.div`
+  flex: 1;
+  height: 4px;
+  background: ${({ theme }) => theme.border};
+  border-radius: 2px;
+  overflow: hidden;
+`;
+
+const RecFill = styled.div`
+  height: 100%;
+  background: ${({ theme }) => theme.danger};
+  border-radius: 2px;
+  width: ${({ $pct }) => $pct}%;
+  transition: width 0.05s linear;
+`;
+
+const SetRecStopBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.danger};
+  border: 1px solid ${({ theme }) => theme.danger};
+  background: transparent;
+  padding: 0.35rem 0.625rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.8; }
+`;
+
+const SetRecActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+`;
+
+const SetRecAudio = styled.audio`
+  width: 100%;
+  margin-bottom: 0.5rem;
+  border-radius: ${({ theme }) => theme.radiusSm};
 `;
 
 function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
@@ -528,6 +731,7 @@ export default function SetDetail() {
   const [deleting, setDeleting] = useState(false);
   const [showAddJokes, setShowAddJokes] = useState(false);
   const [practicing, setPracticing] = useState(false);
+  const [practiceIdx, setPracticeIdx] = useState(0);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
   const [listening, setListening] = useState(false);
@@ -537,11 +741,48 @@ export default function SetDetail() {
   const timer = useTimer();
   useEffect(() => { listeningRef.current = listening; }, [listening]);
   useEffect(() => () => { listenAudio.current?.pause(); }, []);
+  useEffect(() => {
+    if (!practicing) return;
+    function onKey(e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') practiceNext();
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   practicePrev();
+      if (e.key === 'Escape') stopPractice();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [practicing]);
+
+  const [setRecStatus, setSetRecStatus] = useState('idle');
+  const [setRecElapsed, setSetRecElapsed] = useState(0);
+  const [setRecLevel, setSetRecLevel] = useState(0);
+  const [setRecLocalUrl, setSetRecLocalUrl] = useState(null);
+  const setMrRef = useRef(null);
+  const setStreamRef = useRef(null);
+  const setRecBlobRef = useRef(null);
+  const setRecLocalUrlRef = useRef(null);
+  const setRecTimerRef = useRef(null);
+  const setRecAnimRef = useRef(null);
+  const setAudioCtxRef = useRef(null);
+
+  useEffect(() => () => {
+    clearInterval(setRecTimerRef.current);
+    cancelAnimationFrame(setRecAnimRef.current);
+    setAudioCtxRef.current?.close();
+    setStreamRef.current?.getTracks().forEach(t => t.stop());
+    if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (practicing && setRecStatus === 'recording' && !timer.running) timer.start();
+  }, [setRecStatus, practicing]);
 
   const set = sets.find(s => s.id === id);
   useEffect(() => {
     document.title = set ? `${set.name} | My Tight Five` : 'My Tight Five';
   }, [set?.name]);
+  useEffect(() => {
+    if (set?.audio_url && setRecStatus === 'idle') setSetRecStatus('done');
+  }, [set?.audio_url]);
 
   const [jokeIds, setJokeIds] = useState([]);
   const [addingJoke, setAddingJoke] = useState(null);
@@ -580,8 +821,9 @@ export default function SetDetail() {
     const audio = new Audio(jokesWithAudio[idx].audio_url);
     listenAudio.current = audio;
     setListenIdx(idx);
-    audio.play().catch(() => { });
+    audio.play().catch(() => {});
     audio.onended = () => { if (listeningRef.current) playAtIdx(idx + 1); };
+    audio.onerror = () => { if (listeningRef.current) playAtIdx(idx + 1); };
   }
 
   function startListening() {
@@ -594,6 +836,96 @@ export default function SetDetail() {
     listenAudio.current = null;
     setListening(false);
     setListenIdx(0);
+  }
+
+  async function startSetRecording() {
+    setSetRecStatus('requesting');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setStreamRef.current = stream;
+      const chunks = [];
+      const mr = new MediaRecorder(stream, { mimeType: SET_MIME_TYPE });
+      setMrRef.current = mr;
+      mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      mr.onstop = () => {
+        clearInterval(setRecTimerRef.current);
+        cancelAnimationFrame(setRecAnimRef.current);
+        setAudioCtxRef.current?.close();
+        setAudioCtxRef.current = null;
+        setSetRecLevel(0);
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: SET_MIME_TYPE });
+        setRecBlobRef.current = blob;
+        if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        setRecLocalUrlRef.current = url;
+        setSetRecLocalUrl(url);
+        setSetRecStatus('recorded');
+      };
+      mr.start();
+      setSetRecElapsed(0);
+      setRecTimerRef.current = setInterval(() => setSetRecElapsed(s => s + 1), 1000);
+      try {
+        const ctx = new AudioContext();
+        setAudioCtxRef.current = ctx;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        ctx.createMediaStreamSource(stream).connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        function tick() {
+          analyser.getByteFrequencyData(data);
+          const avg = data.reduce((a, b) => a + b, 0) / data.length;
+          setSetRecLevel(Math.round((avg / 255) * 100));
+          setRecAnimRef.current = requestAnimationFrame(tick);
+        }
+        tick();
+      } catch { /* level meter unavailable */ }
+      setSetRecStatus('recording');
+    } catch {
+      setStreamRef.current?.getTracks().forEach(t => t.stop());
+      setSetRecStatus('idle');
+      toast.error("Couldn't access microphone");
+    }
+  }
+
+  function stopSetRecording() { setMrRef.current?.stop(); }
+
+  async function uploadSetRecording() {
+    setSetRecStatus('uploading');
+    try {
+      const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(id, SET_MIME_TYPE);
+      await fetch(uploadUrl, { method: 'PUT', body: setRecBlobRef.current, headers: { 'Content-Type': SET_MIME_TYPE } });
+      await update(id, { audio_url: newAudioUrl });
+      if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
+      setRecLocalUrlRef.current = null;
+      setSetRecLocalUrl(null);
+      setRecBlobRef.current = null;
+      setSetRecStatus('done');
+      toast.success('Set recording saved');
+    } catch {
+      setSetRecStatus('recorded');
+      toast.error("Couldn't save recording");
+    }
+  }
+
+  function discardSetRecording() {
+    if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
+    setRecLocalUrlRef.current = null;
+    setSetRecLocalUrl(null);
+    setRecBlobRef.current = null;
+    setSetRecStatus('idle');
+  }
+
+  async function deleteSetRecording() {
+    try {
+      await Promise.all([
+        deleteAudioFile(id),
+        update(id, { audio_url: null }),
+      ]);
+      setSetRecStatus('idle');
+    } catch {
+      toast.error("Couldn't delete recording");
+    }
   }
 
   function callbackWarning(jokeId) {
@@ -736,41 +1068,28 @@ export default function SetDetail() {
     );
   }
 
-  function currentJokeForTimer() {
-    let elapsed = 0;
-    for (const jid of jokeIds) {
-      const d = jokeMap[jid]?.duration_seconds || 0;
-      if (timer.seconds < elapsed + d) return jokeMap[jid];
-      elapsed += d;
-    }
-    return setJokes[setJokes.length - 1];
-  }
-
-  function nextJokeForTimer() {
-    let elapsed = 0;
-    for (let i = 0; i < jokeIds.length; i++) {
-      const d = jokeMap[jokeIds[i]]?.duration_seconds || 0;
-      if (timer.seconds < elapsed + d) {
-        return jokeMap[jokeIds[i + 1]] || null;
-      }
-      elapsed += d;
-    }
-    return null;
-  }
-
   function startPractice() {
     timer.reset();
+    setPracticeIdx(0);
     setPracticing(true);
-    timer.start();
   }
 
   function stopPractice() {
     timer.stop();
     setPracticing(false);
+    if (setRecStatus === 'recording') stopSetRecording();
   }
 
-  const currentJoke = currentJokeForTimer();
-  const nextJoke = nextJokeForTimer();
+  function practiceNext() {
+    setPracticeIdx(i => (i < setJokes.length - 1 ? i + 1 : i));
+  }
+
+  function practicePrev() {
+    setPracticeIdx(i => (i > 0 ? i - 1 : i));
+  }
+
+  const currentJoke = setJokes[practiceIdx] || null;
+  const nextJoke = setJokes[practiceIdx + 1] || null;
 
   return (
     <Page>
@@ -827,6 +1146,16 @@ export default function SetDetail() {
           )}
         </span>
       </TimingBar>
+
+      {setRecStatus === 'done' && set.audio_url && (
+        <RecordingBar>
+          <RecordingBarLabel>Recording</RecordingBarLabel>
+          <InlinePlayer url={set.audio_url} />
+          <Button $variant="ghost" $size="sm" onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
+            <Trash2 size={13} strokeWidth={2} />Delete
+          </Button>
+        </RecordingBar>
+      )}
 
       {listening && (
         <ListenBar>
@@ -904,16 +1233,89 @@ export default function SetDetail() {
         </AddJokeSection>
       </Body>
 
-      {practicing && (
+      {(practicing || ['requesting', 'recording', 'recorded', 'uploading'].includes(setRecStatus)) && (
         <PracticeOverlay>
-          <TimerDisplay $over={target && timer.seconds > target}>{formatTimer(timer.seconds)}</TimerDisplay>
-          <TimerTarget>Target: {target ? formatDuration(target) : 'No target set'}</TimerTarget>
-          <CurrentJoke>{currentJoke?.setup || 'Set complete'}</CurrentJoke>
-          {currentJoke?.punchline && (
-            <CurrentPunchline>{currentJoke.punchline}</CurrentPunchline>
+          <OverlayBody>
+            <TimerDisplay $over={target && timer.seconds > target}>{formatTimer(timer.seconds)}</TimerDisplay>
+            <TimerTarget>Target: {target ? formatDuration(target) : 'No target set'}</TimerTarget>
+
+            {practicing && timer.running && currentJoke && (
+              <>
+                <OverlayProgress>Joke {practiceIdx + 1} / {setJokes.length}</OverlayProgress>
+                <CurrentJoke>{currentJoke.setup}</CurrentJoke>
+                {currentJoke.punchline && <CurrentPunchline>{currentJoke.punchline}</CurrentPunchline>}
+                {nextJoke && <NextJoke>Next: {nextJoke.setup}</NextJoke>}
+              </>
+            )}
+
+            {practicing && !timer.running && setRecStatus !== 'requesting' && (
+              <>
+                <PracticeRecBtn onClick={startSetRecording}>
+                  <Mic size={14} strokeWidth={2} />Record and start
+                </PracticeRecBtn>
+                <button
+                  onClick={() => timer.start()}
+                  style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', textDecoration: 'underline', background: 'none', cursor: 'pointer' }}
+                >
+                  Start without recording
+                </button>
+              </>
+            )}
+
+            {setRecStatus === 'requesting' && (
+              <PracticeRecBtn disabled style={{ opacity: 0.5 }}>
+                <Mic size={14} strokeWidth={2} />Starting mic…
+              </PracticeRecBtn>
+            )}
+
+            {setRecStatus === 'recording' && (
+              <OverlayRecBar>
+                <RecDot />
+                <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', minWidth: '2.75rem' }}>
+                  {formatTimer(setRecElapsed)}
+                </span>
+                <RecTrack style={{ width: '8rem' }}><RecFill $pct={setRecLevel} /></RecTrack>
+              </OverlayRecBar>
+            )}
+
+            {setRecStatus === 'idle' && practicing && timer.running && (
+              <PracticeRecBtn onClick={startSetRecording}>
+                <Mic size={14} strokeWidth={2} />Record set
+              </PracticeRecBtn>
+            )}
+
+            {!practicing && (setRecStatus === 'recorded' || setRecStatus === 'uploading') && (
+              <OverlayRecSection>
+                <OverlayRecLabel>Save your recording?</OverlayRecLabel>
+                <SetRecAudio src={setRecLocalUrl} controls />
+                <SetRecActions>
+                  <Button onClick={uploadSetRecording} disabled={setRecStatus === 'uploading'}>
+                    {setRecStatus === 'uploading' ? 'Saving…' : 'Save recording'}
+                  </Button>
+                  <Button $variant="ghost" onClick={discardSetRecording} disabled={setRecStatus === 'uploading'}>
+                    Discard
+                  </Button>
+                </SetRecActions>
+              </OverlayRecSection>
+            )}
+          </OverlayBody>
+
+          {practicing && timer.running && (
+            <OverlayNav>
+              <OverlayNavBtn onClick={practicePrev} disabled={practiceIdx === 0}>
+                <ChevronLeft size={18} strokeWidth={2} />Prev
+              </OverlayNavBtn>
+              <Button $variant="danger" onClick={stopPractice} style={{ flexShrink: 0 }}>Stop</Button>
+              {practiceIdx === setJokes.length - 1
+                ? <OverlayNavBtn $primary onClick={stopPractice}>
+                    Done <Check size={16} strokeWidth={2.5} />
+                  </OverlayNavBtn>
+                : <OverlayNavBtn $primary onClick={practiceNext}>
+                    Next <ChevronRight size={18} strokeWidth={2} />
+                  </OverlayNavBtn>
+              }
+            </OverlayNav>
           )}
-          <NextJoke>{nextJoke ? `Next: ${nextJoke.setup}` : 'Last joke'}</NextJoke>
-          <Button $variant="danger" onClick={stopPractice}>Stop</Button>
         </PracticeOverlay>
       )}
     </Page>

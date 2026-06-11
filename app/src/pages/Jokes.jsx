@@ -312,6 +312,17 @@ export default function Jokes() {
     const cat = joke.tags?.[0] || '';
     (groups[cat] = groups[cat] || []).push(joke);
   });
+
+  function countTree(jokeId) {
+    return 1 + (cbMap[jokeId] || []).reduce((sum, child) => sum + countTree(child.id), 0);
+  }
+
+  const catCounts = {};
+  roots.forEach(joke => {
+    const cat = joke.tags?.[0] || '';
+    catCounts[cat] = (catCounts[cat] || 0) + countTree(joke.id);
+  });
+
   const groupKeys = Object.keys(groups).sort((a, b) => {
     if (!a && b) return 1;
     if (a && !b) return -1;
@@ -426,7 +437,7 @@ export default function Jokes() {
                     />
                     {label}
                     <SectionLine />
-                    <SectionCount>{groupJokes.length}</SectionCount>
+                    <SectionCount>{catCounts[cat] ?? groupJokes.length}</SectionCount>
                   </SectionLabel>
                   {!isGroupCollapsed && (
                     <GroupCards>

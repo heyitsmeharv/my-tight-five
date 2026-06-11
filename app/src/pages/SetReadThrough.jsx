@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import Button from '../components/ui/Button';
 import { useResource } from '../hooks/useResource';
 import { SetReadThroughSkeleton } from '../components/ui/Skeleton';
 
@@ -239,6 +240,7 @@ export default function SetReadThrough() {
           <ChevronLeft size={18} strokeWidth={2} />
           Prev
         </NavBtn>
+        <Button $variant="danger" onClick={() => navigate(`/sets/${id}`)} style={{ flexShrink: 0 }}>Stop</Button>
         {isLast
           ? <NavBtn $primary onClick={() => navigate(`/sets/${id}`)}>
               Done

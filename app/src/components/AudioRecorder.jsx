@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Mic, StopCircle, Trash2, AlertCircle } from 'lucide-react';
-import { getAudioUploadUrl } from '../utils/api';
+import { getAudioUploadUrl, deleteAudioFile } from '../utils/api';
 import { Label, FormGroup } from './ui/Input';
 import Button from './ui/Button';
 
@@ -297,7 +297,10 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
     applyStatus('idle');
   }
 
-  function deleteRecording() {
+  async function deleteRecording() {
+    try {
+      await deleteAudioFile(jokeId);
+    } catch { /* best-effort */ }
     onChange(null);
     applyStatus('idle');
   }
@@ -340,9 +343,9 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
           </>
         )}
 
-        {status === 'done' && audioUrl && (
+        {status === 'done' && (localUrl || audioUrl) && (
           <>
-            <StyledAudio $visible controls src={audioUrl} />
+            <StyledAudio $visible controls src={localUrl || audioUrl} />
             <Button type="button" $variant="ghost" onClick={deleteRecording}>
               <Trash2 size={14} strokeWidth={2} />
               Delete recording

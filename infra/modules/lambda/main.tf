@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "s3_audio" {
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = ["s3:PutObject", "s3:GetObject"]
+      Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
       Resource = "${var.audio_bucket_arn}/audio/*"
     }]
   })

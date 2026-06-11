@@ -41,6 +41,10 @@ export const post = (path, body)   => request('POST',   path, body);
 export const put  = (path, body)   => request('PUT',    path, body);
 export const del  = (path)         => request('DELETE', path);
 
+export function deleteAudioFile(jokeId) {
+  return del(`/audio?jokeId=${encodeURIComponent(jokeId)}`);
+}
+
 export async function getAudioUploadUrl(jokeId, mimeType) {
   let token = '';
   try {
