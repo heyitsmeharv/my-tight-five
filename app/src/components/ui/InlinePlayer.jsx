@@ -94,6 +94,8 @@ export default function InlinePlayer({ url }) {
     e.stopPropagation();
     e.preventDefault();
     if (audio.current) {
+      audio.current.onended = null;
+      audio.current.onerror = null;
       audio.current.pause();
       audio.current.src = '';
       audio.current = null;

@@ -1109,6 +1109,16 @@ export default function SetDetail() {
         }
       />
 
+      {setRecStatus === 'done' && set.audio_url && (
+        <RecordingBar>
+          <RecordingBarLabel>Recording</RecordingBarLabel>
+          <InlinePlayer url={set.audio_url} />
+          <Button $variant="ghost" $size="sm" onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
+            <Trash2 size={13} strokeWidth={2} />Delete
+          </Button>
+        </RecordingBar>
+      )}
+
       <TimingBar>
         <span>{setJokes.length} joke{setJokes.length !== 1 ? 's' : ''}</span>
         {target
@@ -1146,16 +1156,6 @@ export default function SetDetail() {
           )}
         </span>
       </TimingBar>
-
-      {setRecStatus === 'done' && set.audio_url && (
-        <RecordingBar>
-          <RecordingBarLabel>Recording</RecordingBarLabel>
-          <InlinePlayer url={set.audio_url} />
-          <Button $variant="ghost" $size="sm" onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
-            <Trash2 size={13} strokeWidth={2} />Delete
-          </Button>
-        </RecordingBar>
-      )}
 
       {listening && (
         <ListenBar>
