@@ -416,42 +416,56 @@ const PracticeOverlay = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.5rem;
+  padding: 2rem 2.5rem;
   text-align: center;
+  overflow-y: auto;
+
+  @media (max-width: 500px) {
+    padding: 2rem 1.25rem;
+    justify-content: flex-start;
+    padding-top: 3rem;
+  }
 `;
 
 const TimerDisplay = styled.div`
-  font-size: 5rem;
+  font-size: clamp(4rem, 10vw, 7rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -2px;
   color: ${({ $over, theme }) => $over ? theme.danger : theme.text};
-  margin-bottom: 0.5rem;
-`;
-
-const TimerTarget = styled.div`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 2rem;
-`;
-
-const CurrentJoke = styled.div`
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-`;
-
-const CurrentPunchline = styled.div`
-  font-size: 0.95rem;
-  color: ${({ theme }) => theme.textMuted};
-  font-style: italic;
   margin-bottom: 0.75rem;
 `;
 
-const NextJoke = styled.div`
-  font-size: 0.85rem;
+const TimerTarget = styled.div`
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
   color: ${({ theme }) => theme.textMuted};
+  letter-spacing: 0.04em;
+  margin-bottom: 3rem;
+`;
+
+const CurrentJoke = styled.div`
+  font-size: clamp(1.4rem, 3vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: min(800px, 90vw);
+  margin-bottom: 1.25rem;
+`;
+
+const CurrentPunchline = styled.div`
+  font-size: clamp(1.1rem, 2.5vw, 1.75rem);
+  color: ${({ theme }) => theme.textMuted};
+  font-style: italic;
+  line-height: 1.45;
+  max-width: min(800px, 90vw);
+  margin-bottom: 1.5rem;
+`;
+
+const NextJoke = styled.div`
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  color: ${({ theme }) => theme.textMuted};
+  max-width: min(700px, 90vw);
   margin-bottom: 2.5rem;
+  opacity: 0.7;
 `;
 
 function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
@@ -894,11 +908,11 @@ export default function SetDetail() {
         <PracticeOverlay>
           <TimerDisplay $over={target && timer.seconds > target}>{formatTimer(timer.seconds)}</TimerDisplay>
           <TimerTarget>Target: {target ? formatDuration(target) : 'No target set'}</TimerTarget>
-          <CurrentJoke>{currentJoke?.setup?.slice(0, 80) || 'Set complete'}</CurrentJoke>
+          <CurrentJoke>{currentJoke?.setup || 'Set complete'}</CurrentJoke>
           {currentJoke?.punchline && (
-            <CurrentPunchline>{currentJoke.punchline.slice(0, 100)}</CurrentPunchline>
+            <CurrentPunchline>{currentJoke.punchline}</CurrentPunchline>
           )}
-          <NextJoke>{nextJoke ? `Next: ${nextJoke.setup?.slice(0, 60)}` : 'Last joke'}</NextJoke>
+          <NextJoke>{nextJoke ? `Next: ${nextJoke.setup}` : 'Last joke'}</NextJoke>
           <Button $variant="danger" onClick={stopPractice}>Stop</Button>
         </PracticeOverlay>
       )}

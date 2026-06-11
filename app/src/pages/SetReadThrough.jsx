@@ -45,13 +45,14 @@ const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 1.25rem;
-  max-width: 640px;
-  width: 100%;
-  margin: 0 auto;
+  padding: 1.5rem 2rem 6rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem 3rem 6rem;
+  }
 
   @media (max-width: 400px) {
-    padding: 1.25rem 1rem;
+    padding: 1.25rem 1rem 6rem;
   }
 `;
 
@@ -65,18 +66,14 @@ const JokeNumber = styled.div`
 `;
 
 const Setup = styled.h2`
-  font-size: 1.25rem;
+  font-size: clamp(1.4rem, 3.5vw, 2.5rem);
   font-weight: 600;
-  line-height: 1.45;
-  margin-bottom: 1.25rem;
-
-  @media (max-width: 400px) {
-    font-size: 1.1rem;
-  }
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
 `;
 
 const PunchlineToggle = styled.button`
-  font-size: 0.85rem;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
   color: ${({ theme }) => theme.textMuted};
   text-decoration: underline;
   padding: 0;
@@ -86,8 +83,8 @@ const PunchlineToggle = styled.button`
 `;
 
 const Punchline = styled.p`
-  font-size: 1.15rem;
-  line-height: 1.5;
+  font-size: clamp(1.25rem, 3vw, 2.1rem);
+  line-height: 1.45;
   color: ${({ theme }) => theme.text};
   border-left: 3px solid ${({ theme }) => theme.primary};
   padding-left: 1rem;
@@ -104,8 +101,19 @@ const Notes = styled.p`
 const Nav = styled.div`
   display: flex;
   gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 1.5rem;
+  padding: 1rem 2rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg};
+  position: sticky;
+  bottom: 0;
+
+  @media (min-width: 768px) {
+    padding: 1rem 3rem;
+  }
+
+  @media (max-width: 400px) {
+    padding: 0.875rem 1rem;
+  }
 `;
 
 const NavBtn = styled.button`
@@ -224,24 +232,24 @@ export default function SetReadThrough() {
         )}
 
         {joke.notes && <Notes>{joke.notes}</Notes>}
-
-        <Nav>
-          <NavBtn onClick={() => setIndex(i => i - 1)} disabled={index === 0}>
-            <ChevronLeft size={18} strokeWidth={2} />
-            Prev
-          </NavBtn>
-          {isLast
-            ? <NavBtn $primary onClick={() => navigate(`/sets/${id}`)}>
-                Done
-                <Check size={16} strokeWidth={2.5} />
-              </NavBtn>
-            : <NavBtn $primary onClick={() => setIndex(i => i + 1)}>
-                Next
-                <ChevronRight size={18} strokeWidth={2} />
-              </NavBtn>
-          }
-        </Nav>
       </Content>
+
+      <Nav>
+        <NavBtn onClick={() => setIndex(i => i - 1)} disabled={index === 0}>
+          <ChevronLeft size={18} strokeWidth={2} />
+          Prev
+        </NavBtn>
+        {isLast
+          ? <NavBtn $primary onClick={() => navigate(`/sets/${id}`)}>
+              Done
+              <Check size={16} strokeWidth={2.5} />
+            </NavBtn>
+          : <NavBtn $primary onClick={() => setIndex(i => i + 1)}>
+              Next
+              <ChevronRight size={18} strokeWidth={2} />
+            </NavBtn>
+        }
+      </Nav>
     </Page>
   );
 }
