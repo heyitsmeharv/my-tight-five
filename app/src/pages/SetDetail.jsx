@@ -583,6 +583,14 @@ const OverlayRecBar = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const RecHint = styled.p`
+  font-size: 0.75rem;
+  color: ${({ $warn, theme }) => $warn ? theme.danger : theme.textMuted};
+  opacity: ${({ $warn }) => $warn ? 1 : 0.6};
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
+`;
+
 const PracticeRecBtn = styled.button`
   display: flex;
   align-items: center;
@@ -595,7 +603,7 @@ const PracticeRecBtn = styled.button`
   padding: 0.5rem 1rem;
   border-radius: ${({ theme }) => theme.radiusSm};
   cursor: pointer;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.375rem;
   transition: color 0.15s, border-color 0.15s;
   &:hover { color: ${({ theme }) => theme.text}; border-color: ${({ theme }) => theme.textMuted}; }
 `;
@@ -603,6 +611,7 @@ const PracticeRecBtn = styled.button`
 const SET_MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
   ? 'audio/webm'
   : 'audio/mp4';
+const SET_REC_MAX_SECS = 60 * 60;
 
 const recPulse = keyframes`
   0%, 100% { opacity: 1; }
@@ -628,6 +637,13 @@ const SetRecBar = styled.div`
   display: flex;
   align-items: center;
   gap: 0.625rem;
+`;
+
+const RecTimer = styled.span`
+  font-family: monospace;
+  font-size: 0.9rem;
+  min-width: 2.75rem;
+  color: ${({ $warn, theme }) => $warn ? theme.danger : 'inherit'};
 `;
 
 const RecDot = styled.span`
@@ -761,7 +777,7 @@ export default function SetDetail() {
     document.body.style.overflow = 'hidden';
     function onKey(e) {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') practiceNext();
-      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   practicePrev();
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') practicePrev();
       if (e.key === 'Escape') stopPractice();
     }
     window.addEventListener('keydown', onKey);
@@ -775,16 +791,19 @@ export default function SetDetail() {
   const [setRecElapsed, setSetRecElapsed] = useState(0);
   const [setRecLevel, setSetRecLevel] = useState(0);
   const [setRecLocalUrl, setSetRecLocalUrl] = useState(null);
+  const [recHitMax, setRecHitMax] = useState(false);
   const setMrRef = useRef(null);
   const setStreamRef = useRef(null);
   const setRecBlobRef = useRef(null);
   const setRecLocalUrlRef = useRef(null);
   const setRecTimerRef = useRef(null);
+  const setRecMaxTimerRef = useRef(null);
   const setRecAnimRef = useRef(null);
   const setAudioCtxRef = useRef(null);
 
   useEffect(() => () => {
     clearInterval(setRecTimerRef.current);
+    clearTimeout(setRecMaxTimerRef.current);
     cancelAnimationFrame(setRecAnimRef.current);
     setAudioCtxRef.current?.close();
     setStreamRef.current?.getTracks().forEach(t => t.stop());
@@ -840,7 +859,7 @@ export default function SetDetail() {
     const audio = new Audio(jokesWithAudio[idx].audio_url);
     listenAudio.current = audio;
     setListenIdx(idx);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
     audio.onended = () => { if (listeningRef.current) playAtIdx(idx + 1); };
     audio.onerror = () => { if (listeningRef.current) playAtIdx(idx + 1); };
   }
@@ -858,6 +877,7 @@ export default function SetDetail() {
   }
 
   async function startSetRecording() {
+    setRecHitMax(false);
     setSetRecStatus('requesting');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -868,6 +888,7 @@ export default function SetDetail() {
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
       mr.onstop = () => {
         clearInterval(setRecTimerRef.current);
+        clearTimeout(setRecMaxTimerRef.current);
         cancelAnimationFrame(setRecAnimRef.current);
         setAudioCtxRef.current?.close();
         setAudioCtxRef.current = null;
@@ -882,6 +903,7 @@ export default function SetDetail() {
         setSetRecStatus('recorded');
       };
       mr.start();
+      setRecMaxTimerRef.current = setTimeout(() => { setRecHitMax(true); stopSetRecording(); }, SET_REC_MAX_SECS * 1000);
       setSetRecElapsed(0);
       setRecTimerRef.current = setInterval(() => setSetRecElapsed(s => s + 1), 1000);
       try {
@@ -910,6 +932,11 @@ export default function SetDetail() {
   function stopSetRecording() { setMrRef.current?.stop(); }
 
   async function uploadSetRecording() {
+    const MAX_SET_BYTES = 100 * 1024 * 1024;
+    if (setRecBlobRef.current?.size > MAX_SET_BYTES) {
+      toast.error('Recording is too large to save.');
+      return;
+    }
     setSetRecStatus('uploading');
     try {
       const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(id, SET_MIME_TYPE);
@@ -932,6 +959,7 @@ export default function SetDetail() {
     setRecLocalUrlRef.current = null;
     setSetRecLocalUrl(null);
     setRecBlobRef.current = null;
+    setRecHitMax(false);
     setSetRecStatus('idle');
   }
 
@@ -1225,7 +1253,7 @@ export default function SetDetail() {
             <Card $compact style={{ marginTop: '0.625rem' }}>
               {jokes.length === 0 ? (
                 <AddJokeEmptyMsg>
-                  No jokes yet — <Link to="/jokes/new">Write one</Link>
+                  No jokes yet - <Link to="/jokes/new">Write one</Link>
                 </AddJokeEmptyMsg>
               ) : pickGroupKeys.map(cat => {
                 const groupJokes = pickGroups[cat];
@@ -1282,6 +1310,7 @@ export default function SetDetail() {
                 <PracticeRecBtn onClick={startSetRecording}>
                   <Mic size={14} strokeWidth={2} />Record and start
                 </PracticeRecBtn>
+                <RecHint>Max 60 min recording</RecHint>
                 <button
                   onClick={() => timer.start()}
                   style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', textDecoration: 'underline', background: 'none', cursor: 'pointer' }}
@@ -1298,24 +1327,37 @@ export default function SetDetail() {
             )}
 
             {setRecStatus === 'recording' && (
-              <OverlayRecBar>
-                <RecDot />
-                <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', minWidth: '2.75rem' }}>
-                  {formatTimer(setRecElapsed)}
-                </span>
-                <RecTrack style={{ width: '8rem' }}><RecFill $pct={setRecLevel} /></RecTrack>
-              </OverlayRecBar>
+              <>
+                <OverlayRecBar>
+                  <RecDot />
+                  <RecTimer $warn={setRecElapsed >= SET_REC_MAX_SECS - Math.min(30, Math.ceil(SET_REC_MAX_SECS * 0.3))}>
+                    {formatTimer(setRecElapsed)}
+                  </RecTimer>
+                  <RecTrack style={{ width: '8rem' }}><RecFill $pct={setRecLevel} /></RecTrack>
+                </OverlayRecBar>
+                {setRecElapsed >= SET_REC_MAX_SECS - Math.min(30, Math.ceil(SET_REC_MAX_SECS * 0.3)) && (
+                  <RecHint $warn>Approaching max recording length</RecHint>
+                )}
+              </>
+            )}
+
+            {setRecStatus === 'recorded' && recHitMax && practicing && (
+              <RecHint $warn>Max recording length reached - recording stopped</RecHint>
             )}
 
             {setRecStatus === 'idle' && practicing && timer.running && (
-              <PracticeRecBtn onClick={startSetRecording}>
-                <Mic size={14} strokeWidth={2} />Record set
-              </PracticeRecBtn>
+              <>
+                <PracticeRecBtn onClick={startSetRecording}>
+                  <Mic size={14} strokeWidth={2} />Record set
+                </PracticeRecBtn>
+                <RecHint>Max 60 min recording</RecHint>
+              </>
             )}
 
             {!practicing && (setRecStatus === 'recorded' || setRecStatus === 'uploading') && (
               <OverlayRecSection>
                 <OverlayRecLabel>Save your recording?</OverlayRecLabel>
+                {recHitMax && <RecHint $warn style={{ marginTop: 0 }}>Recording stopped at max duration</RecHint>}
                 <SetRecAudio src={setRecLocalUrl} controls />
                 <SetRecActions>
                   <Button onClick={uploadSetRecording} disabled={setRecStatus === 'uploading'}>
@@ -1336,11 +1378,11 @@ export default function SetDetail() {
               </OverlayNavBtn>
               {practiceIdx === setJokes.length - 1
                 ? <OverlayNavBtn $primary onClick={stopPractice}>
-                    Done <Check size={16} strokeWidth={2.5} />
-                  </OverlayNavBtn>
+                  Done <Check size={16} strokeWidth={2.5} />
+                </OverlayNavBtn>
                 : <OverlayNavBtn $primary onClick={practiceNext}>
-                    Next <ChevronRight size={18} strokeWidth={2} />
-                  </OverlayNavBtn>
+                  Next <ChevronRight size={18} strokeWidth={2} />
+                </OverlayNavBtn>
               }
             </OverlayNav>
           )}

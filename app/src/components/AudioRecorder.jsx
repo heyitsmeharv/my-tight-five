@@ -35,7 +35,7 @@ const Dot = styled.span`
 const Timer = styled.span`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.85rem;
-  color: ${({ theme }) => theme.text};
+  color: ${({ $warn, theme }) => $warn ? theme.danger : theme.text};
   min-width: 2.25rem;
 `;
 
@@ -134,8 +134,9 @@ function formatTime(secs) {
   return `${m}:${String(s).padStart(2, '00')}`;
 }
 
-const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onChange, onDuration, onStatusChange }, ref) {
+const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onChange, onDuration, onStatusChange, maxDuration = 300 }, ref) {
   const [status, setStatus] = useState(audioUrl ? 'done' : 'idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
   function applyStatus(next) {
     setStatus(next);
@@ -158,6 +159,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
   const localUrlRef = useRef(null);
   const streamRef = useRef(null);
   const timerRef = useRef(null);
+  const maxTimerRef = useRef(null);
   const animFrameRef = useRef(null);
   const startTimeRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -230,6 +232,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
 
   function stopFeedback() {
     clearInterval(timerRef.current);
+    clearTimeout(maxTimerRef.current);
     cancelAnimationFrame(animFrameRef.current);
     setLevel(0);
     audioCtxRef.current?.close();
@@ -237,6 +240,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
   }
 
   async function startRecording() {
+    setErrorMsg('');
     applyStatus('requesting');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -262,11 +266,13 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
       };
 
       mr.start();
+      maxTimerRef.current = setTimeout(() => stopRecording(), maxDuration * 1000);
       startTimeRef.current = Date.now();
       startFeedback(stream);
       applyStatus('recording');
     } catch {
       streamRef.current?.getTracks().forEach(t => t.stop());
+      setErrorMsg('Recording failed. Check microphone permissions and try again.');
       applyStatus('error');
     }
   }
@@ -276,6 +282,12 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
   }
 
   async function handleUpload() {
+    const MAX_BYTES = 15 * 1024 * 1024;
+    if (blobRef.current?.size > MAX_BYTES) {
+      setErrorMsg('Recording is too large to save. Maximum is 5 minutes.');
+      applyStatus('error');
+      return;
+    }
     applyStatus('uploading');
     try {
       const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(jokeId, MIME_TYPE);
@@ -307,7 +319,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
 
   return (
     <FormGroup>
-      <Label>Recording</Label>
+      <Label>Recording (max {Math.round(maxDuration / 60)} min)</Label>
       <AudioRow>
         {(status === 'idle' || status === 'requesting') && (
           <RecordBtn type="button" onClick={startRecording} $loading={status === 'requesting'} disabled={status === 'requesting'}>
@@ -319,7 +331,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
         {status === 'recording' && (
           <RecordingBar>
             <Dot />
-            <Timer>{formatTime(elapsed)}</Timer>
+            <Timer $warn={elapsed >= maxDuration - Math.min(30, Math.ceil(maxDuration * 0.3))}>{formatTime(elapsed)}</Timer>
             <LevelTrack><LevelFill $pct={level} /></LevelTrack>
             <StopBtn type="button" onClick={stopRecording}>
               <StopCircle size={14} strokeWidth={2.5} />
@@ -359,7 +371,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
 
         {status === 'error' && (
           <>
-            <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: '0.3125rem', verticalAlign: 'middle' }} />Recording failed. Check microphone permissions and try again.</ErrorMsg>
+            <ErrorMsg><AlertCircle size={14} strokeWidth={2} style={{ marginRight: '0.3125rem', verticalAlign: 'middle' }} />{errorMsg || 'Recording failed. Check microphone permissions and try again.'}</ErrorMsg>
             <Button type="button" $variant="ghost" onClick={() => applyStatus('idle')}>Try again</Button>
           </>
         )}
