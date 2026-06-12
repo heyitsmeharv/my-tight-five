@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { toast } from 'react-toastify';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
+import { deleteAudioFile } from '../utils/api';
 import { JokeEditSkeleton } from '../components/ui/Skeleton';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -268,9 +269,18 @@ export default function JokeEdit() {
 
   async function handleSaveWithRecording() {
     setUploadingSave(true);
+    let newAudioUrl;
     try {
-      const newAudioUrl = await audioRecorderRef.current.upload();
-      setUnsavedRecordingConfirm(false);
+      newAudioUrl = await audioRecorderRef.current.upload();
+    } catch {
+      toast.error("Couldn't upload recording");
+      setUploadingSave(false);
+      return;
+    }
+
+    setUnsavedRecordingConfirm(false);
+    const jokeId = isNew ? pendingIdRef.current : id;
+    try {
       const { category, ...rest } = form;
       const data = {
         ...rest,
@@ -287,7 +297,17 @@ export default function JokeEdit() {
       setIsDirty(false);
       toast.success('Saved');
       navigate('/jokes');
-    } catch {
+    } catch (err) {
+      if (err.message?.endsWith('409')) {
+        // DB write succeeded on a prior attempt whose response was lost.
+        // The audio file and joke are both intact — treat as success.
+        toast.success('Saved');
+        navigate('/jokes');
+        return;
+      }
+      try { await deleteAudioFile(jokeId); } catch {}
+      audioRecorderRef.current?.discard();
+      set('audio_url', null);
       toast.error("Couldn't save");
     } finally {
       setUploadingSave(false);
@@ -297,11 +317,11 @@ export default function JokeEdit() {
   async function handleDelete() {
     setDeleteLoading(true);
     try {
-      await remove(id);
       const affected = sets.filter(s => (s.joke_ids || []).includes(id));
       await Promise.all(affected.map(s =>
         updateSet(s.id, { ...s, joke_ids: s.joke_ids.filter(jid => jid !== id) })
       ));
+      await remove(id);
       setIsDirty(false);
       toast.success('Deleted');
       navigate('/jokes');
@@ -379,7 +399,10 @@ export default function JokeEdit() {
           audioUrl={form.audio_url}
           onChange={url => set('audio_url', url)}
           onDuration={secs => set('duration_seconds', secs)}
-          onStatusChange={setRecordingStatus}
+          onStatusChange={status => {
+            setRecordingStatus(status);
+            if (status === 'recording' || status === 'recorded') setIsDirty(true);
+          }}
         />
 
         <DetailsToggle type="button" onClick={() => setShowDetails(v => !v)}>

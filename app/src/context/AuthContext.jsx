@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
+  IS_DEV_MOCK,
   getCurrentUser,
   getSession,
   signOut as cognitoSignOut,
@@ -10,8 +11,6 @@ import {
   confirmForgotPassword as cognitoConfirmForgotPassword,
 } from '../utils/cognito';
 import { setUnauthorizedHandler } from '../utils/api';
-
-const IS_DEV_MOCK = import.meta.env.DEV && !import.meta.env.VITE_COGNITO_USER_POOL_ID;
 
 const AuthCtx = createContext(null);
 

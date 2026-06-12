@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 're
 import styled, { keyframes } from 'styled-components';
 import { Mic, StopCircle, Trash2, AlertCircle } from 'lucide-react';
 import { getAudioUploadUrl, deleteAudioFile } from '../utils/api';
+import { formatTimer } from '../utils/time';
 import { Label, FormGroup } from './ui/Input';
 import Button from './ui/Button';
 
@@ -128,11 +129,6 @@ const MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSu
   ? 'audio/webm'
   : 'audio/mp4';
 
-function formatTime(secs) {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${m}:${String(s).padStart(2, '00')}`;
-}
 
 const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onChange, onDuration, onStatusChange, maxDuration = 300 }, ref) {
   const [status, setStatus] = useState(audioUrl ? 'done' : 'idle');
@@ -145,6 +141,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
 
   useImperativeHandle(ref, () => ({
     upload: handleUpload,
+    discard,
   }));
 
   const [localUrl, setLocalUrl] = useState(null);
@@ -172,6 +169,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
     return () => {
       if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current);
       stopFeedback();
+      if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop();
       streamRef.current?.getTracks().forEach(t => t.stop());
     };
   }, []);
@@ -331,7 +329,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
         {status === 'recording' && (
           <RecordingBar>
             <Dot />
-            <Timer $warn={elapsed >= maxDuration - Math.min(30, Math.ceil(maxDuration * 0.3))}>{formatTime(elapsed)}</Timer>
+            <Timer $warn={elapsed >= maxDuration - Math.min(30, Math.ceil(maxDuration * 0.3))}>{formatTimer(elapsed)}</Timer>
             <LevelTrack><LevelFill $pct={level} /></LevelTrack>
             <StopBtn type="button" onClick={stopRecording}>
               <StopCircle size={14} strokeWidth={2.5} />

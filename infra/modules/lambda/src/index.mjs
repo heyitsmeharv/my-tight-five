@@ -29,7 +29,7 @@ async function resolveAudioUrls(items) {
     if (!item.audio_url?.startsWith('audio/')) return item;
     const audioUrl = await getSignedUrl(s3, new GetObjectCommand({
       Bucket: AUDIO_BUCKET, Key: item.audio_url,
-    }), { expiresIn: 3600 });
+    }), { expiresIn: 86400 });
     return { ...item, audio_url: audioUrl };
   }));
 }
@@ -113,14 +113,20 @@ export async function handler(event) {
     if (method === 'POST') {
       const body = JSON.parse(event.body || '{}');
       if (!body.id) return respond(400, { error: 'Missing id' }, origin);
+      if (!/^[\w-]{1,128}$/.test(body.id)) return respond(400, { error: 'Invalid id' }, origin);
       const { PK: _pk, SK: _sk, ...rest } = body;
       const item = { PK, SK: `${pfx}#${body.id}`, ...rest };
-      await client.send(new PutCommand({ TableName: TABLE, Item: item }));
+      await client.send(new PutCommand({
+        TableName: TABLE,
+        Item: item,
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }));
       return respond(201, rest, origin);
     }
 
     if (method === 'PUT') {
       if (!id) return respond(400, { error: 'Missing id' }, origin);
+      if (!/^[\w-]{1,128}$/.test(id)) return respond(400, { error: 'Invalid id' }, origin);
       const body = JSON.parse(event.body || '{}');
       const { PK: _pk, SK: _sk, ...rest } = body;
       const item = { PK, SK: `${pfx}#${id}`, ...rest };
@@ -143,6 +149,7 @@ export async function handler(event) {
 
     return respond(405, { error: 'Method not allowed' }, origin);
   } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') return respond(409, { error: 'Already exists' }, origin);
     console.error(err);
     return respond(500, { error: 'Internal server error' }, origin);
   }

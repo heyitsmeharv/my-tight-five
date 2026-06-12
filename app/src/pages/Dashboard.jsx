@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { Plus, CornerDownLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { ulid } from 'ulid';
+import { post } from '../utils/api';
 import { useResource } from '../hooks/useResource';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,8 +13,6 @@ import StageBadge from '../components/ui/StageBadge';
 import InlinePlayer from '../components/ui/InlinePlayer';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
 import { formatDuration, relativeTime } from '../utils/time';
-import { post } from '../utils/api';
-import { ulid } from 'ulid';
 import { STAGE_COLOR } from '../utils/stages';
 
 const fadeUp = keyframes`
@@ -343,7 +343,7 @@ export default function Dashboard() {
     if (!idea.trim()) return;
     setSaving(true);
     try {
-      await post('/ideas', { id: ulid(), created_at: new Date().toISOString(), text: idea.trim(), tags: [] });
+      await post('/ideas', { id: ulid(), text: idea.trim(), tags: [] });
       setIdea('');
       toast.success('Captured');
     } catch {

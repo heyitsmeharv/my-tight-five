@@ -49,26 +49,25 @@ export function useResource(resource) {
     return () => controller.abort();
   }, [load]);
 
-  async function create(fields) {
+  const create = useCallback(async (fields) => {
     const id = ulid();
     const item = { id, created_at: new Date().toISOString(), ...fields };
     const saved = await post(`/${resource}`, item);
     if (mountedRef.current) setItems(prev => [saved, ...prev]);
     return saved;
-  }
+  }, [resource]);
 
-  async function update(id, fields) {
-    const existing = items.find(i => i.id === id) || {};
-    const item = { ...existing, ...fields, id };
+  const update = useCallback(async (id, fields) => {
+    const item = { ...fields, id };
     const saved = await put(`/${resource}/${id}`, item);
     if (mountedRef.current) setItems(prev => prev.map(i => i.id === id ? saved : i));
     return saved;
-  }
+  }, [resource]);
 
-  async function remove(id) {
+  const remove = useCallback(async (id) => {
     await del(`/${resource}/${id}`);
     if (mountedRef.current) setItems(prev => prev.filter(i => i.id !== id));
-  }
+  }, [resource]);
 
   return { items, loading, error, create, update, remove, reload: load };
 }

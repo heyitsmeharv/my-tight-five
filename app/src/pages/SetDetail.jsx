@@ -806,6 +806,7 @@ export default function SetDetail() {
     clearTimeout(setRecMaxTimerRef.current);
     cancelAnimationFrame(setRecAnimRef.current);
     setAudioCtxRef.current?.close();
+    if (setMrRef.current?.state !== 'inactive') setMrRef.current?.stop();
     setStreamRef.current?.getTracks().forEach(t => t.stop());
     if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
   }, []);
@@ -941,7 +942,7 @@ export default function SetDetail() {
     try {
       const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(id, SET_MIME_TYPE);
       await fetch(uploadUrl, { method: 'PUT', body: setRecBlobRef.current, headers: { 'Content-Type': SET_MIME_TYPE } });
-      await update(id, { audio_url: newAudioUrl });
+      await update(id, { ...set, audio_url: newAudioUrl });
       if (setRecLocalUrlRef.current) URL.revokeObjectURL(setRecLocalUrlRef.current);
       setRecLocalUrlRef.current = null;
       setSetRecLocalUrl(null);
@@ -965,11 +966,9 @@ export default function SetDetail() {
 
   async function deleteSetRecording() {
     try {
-      await Promise.all([
-        deleteAudioFile(id),
-        update(id, { audio_url: null }),
-      ]);
+      await update(id, { ...set, audio_url: null });
       setSetRecStatus('idle');
+      deleteAudioFile(id).catch(() => {});
     } catch {
       toast.error("Couldn't delete recording");
     }
@@ -1129,7 +1128,7 @@ export default function SetDetail() {
     timer.stop();
     setPracticing(false);
     setPracticeLoading(false);
-    if (setRecStatus === 'recording') stopSetRecording();
+    if (setMrRef.current?.state === 'recording') stopSetRecording();
   }
 
   function practiceNext() {

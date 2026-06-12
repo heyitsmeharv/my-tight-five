@@ -100,6 +100,8 @@ const JokeCard = styled.div`
   padding: 0.875rem 2.875rem 0.875rem 1rem;
   cursor: pointer;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px;
   animation: ${fadeUp} 0.2s ease both;
   animation-delay: ${({ $i }) => Math.min($i * 40, 300)}ms;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
@@ -380,11 +382,11 @@ export default function Jokes() {
   async function handleDelete() {
     setDeleteLoading(true);
     try {
-      await remove(deleting);
       const affected = sets.filter(s => (s.joke_ids || []).includes(deleting));
       await Promise.all(affected.map(s =>
         updateSet(s.id, { ...s, joke_ids: s.joke_ids.filter(id => id !== deleting) })
       ));
+      await remove(deleting);
       toast.success('Deleted');
       setDeleting(null);
     } catch {

@@ -1,6 +1,6 @@
 const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID;
 const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
-const IS_DEV_MOCK = import.meta.env.DEV && !import.meta.env.VITE_COGNITO_USER_POOL_ID;
+export const IS_DEV_MOCK = import.meta.env.DEV && !import.meta.env.VITE_COGNITO_USER_POOL_ID;
 
 const REGION = USER_POOL_ID?.split('_')[0] ?? '';
 const ENDPOINT = REGION ? `https://cognito-idp.${REGION}.amazonaws.com/` : '';
@@ -42,7 +42,7 @@ const ERROR_MAP = {
   ExpiredCodeException: 'Verification code has expired - request a new one.',
   InvalidPasswordException: 'Password does not meet requirements (12+ chars, upper, lower, number, symbol).',
   InvalidParameterException: 'Password does not meet requirements (12+ chars, upper, lower, number, symbol).',
-  UserNotFoundException: 'No account found for that email.',
+  UserNotFoundException: 'Incorrect email or password.',
   LimitExceededException: 'Too many attempts - please wait and try again.',
 };
 
