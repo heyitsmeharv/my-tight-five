@@ -31,7 +31,7 @@ import InlinePlayer from '../components/ui/InlinePlayer';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { formatDuration, formatTimer, totalSetDuration, parseDurationInput } from '../utils/time';
 import { STAGE_COLOR } from '../utils/stages';
-import { SetDetailSkeleton } from '../components/ui/Skeleton';
+import { SetDetailSkeleton, SetPracticeOverlaySkeleton } from '../components/ui/Skeleton';
 
 const Page = styled.div`
   padding-bottom: 5rem;
@@ -437,6 +437,23 @@ const PracticeOverlay = styled.div`
   overflow: hidden;
 `;
 
+const OverlayTopBar = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem 0;
+`;
+
+const OverlayCloseBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.25rem;
+  transition: color 0.15s;
+  &:hover { color: ${({ theme }) => theme.text}; }
+`;
+
 const OverlayBody = styled.div`
   flex: 1;
   min-height: 0;
@@ -448,6 +465,11 @@ const OverlayBody = styled.div`
   text-align: center;
   padding: 2rem 2.5rem;
 
+  @media (min-width: 501px) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
   @media (max-width: 500px) {
     padding: 2rem 1.25rem;
     justify-content: flex-start;
@@ -456,7 +478,7 @@ const OverlayBody = styled.div`
 `;
 
 const OverlayProgress = styled.div`
-  font-size: 0.75rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -464,14 +486,6 @@ const OverlayProgress = styled.div`
   margin-bottom: 1rem;
 `;
 
-const ShowPunchlineBtn = styled.button`
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
-  color: ${({ theme }) => theme.textMuted};
-  text-decoration: underline;
-  padding: 0;
-  cursor: pointer;
-  margin-bottom: 1.25rem;
-`;
 
 const OverlayNav = styled.div`
   flex-shrink: 0;
@@ -516,36 +530,36 @@ const TimerDisplay = styled.div`
 `;
 
 const TimerTarget = styled.div`
-  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
   color: ${({ theme }) => theme.textMuted};
   letter-spacing: 0.04em;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
+`;
+
+const JokeSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: min(720px, 90vw);
+  text-align: left;
 `;
 
 const CurrentJoke = styled.div`
-  font-size: clamp(1.4rem, 3vw, 2.25rem);
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
   font-weight: 600;
   line-height: 1.45;
-  max-width: min(800px, 90vw);
   margin-bottom: 1.25rem;
 `;
 
 const CurrentPunchline = styled.div`
-  font-size: clamp(1.1rem, 2.5vw, 1.75rem);
-  color: ${({ theme }) => theme.textMuted};
-  font-style: italic;
-  line-height: 1.45;
-  max-width: min(800px, 90vw);
-  margin-bottom: 1.5rem;
+  font-size: clamp(1.1rem, 2vw, 1.55rem);
+  line-height: 1.5;
+  color: ${({ theme }) => theme.text};
+  border-left: 3px solid ${({ theme }) => theme.primary};
+  padding-left: 1rem;
+  margin-bottom: 1.25rem;
 `;
 
-const NextJoke = styled.div`
-  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
-  color: ${({ theme }) => theme.textMuted};
-  max-width: min(700px, 90vw);
-  margin-bottom: 2.5rem;
-  opacity: 0.7;
-`;
 
 const OverlayRecSection = styled.div`
   display: flex;
@@ -731,6 +745,7 @@ export default function SetDetail() {
   const [deleting, setDeleting] = useState(false);
   const [showAddJokes, setShowAddJokes] = useState(false);
   const [practicing, setPracticing] = useState(false);
+  const [practiceLoading, setPracticeLoading] = useState(false);
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
@@ -743,13 +758,17 @@ export default function SetDetail() {
   useEffect(() => () => { listenAudio.current?.pause(); }, []);
   useEffect(() => {
     if (!practicing) return;
+    document.body.style.overflow = 'hidden';
     function onKey(e) {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') practiceNext();
       if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   practicePrev();
       if (e.key === 'Escape') stopPractice();
     }
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
   }, [practicing]);
 
   const [setRecStatus, setSetRecStatus] = useState('idle');
@@ -1071,12 +1090,17 @@ export default function SetDetail() {
   function startPractice() {
     timer.reset();
     setPracticeIdx(0);
-    setPracticing(true);
+    setPracticeLoading(true);
+    setTimeout(() => {
+      setPracticeLoading(false);
+      setPracticing(true);
+    }, 1500);
   }
 
   function stopPractice() {
     timer.stop();
     setPracticing(false);
+    setPracticeLoading(false);
     if (setRecStatus === 'recording') stopSetRecording();
   }
 
@@ -1089,7 +1113,6 @@ export default function SetDetail() {
   }
 
   const currentJoke = setJokes[practiceIdx] || null;
-  const nextJoke = setJokes[practiceIdx + 1] || null;
 
   return (
     <Page>
@@ -1233,19 +1256,25 @@ export default function SetDetail() {
         </AddJokeSection>
       </Body>
 
-      {(practicing || ['requesting', 'recording', 'recorded', 'uploading'].includes(setRecStatus)) && (
+      {practiceLoading && <SetPracticeOverlaySkeleton />}
+
+      {!practiceLoading && (practicing || ['requesting', 'recording', 'recorded', 'uploading'].includes(setRecStatus)) && (
         <PracticeOverlay>
+          <OverlayTopBar>
+            <OverlayCloseBtn onClick={stopPractice} aria-label="Stop practice">
+              <X size={22} strokeWidth={2} />
+            </OverlayCloseBtn>
+          </OverlayTopBar>
           <OverlayBody>
             <TimerDisplay $over={target && timer.seconds > target}>{formatTimer(timer.seconds)}</TimerDisplay>
             <TimerTarget>Target: {target ? formatDuration(target) : 'No target set'}</TimerTarget>
 
             {practicing && timer.running && currentJoke && (
-              <>
+              <JokeSection>
                 <OverlayProgress>Joke {practiceIdx + 1} / {setJokes.length}</OverlayProgress>
                 <CurrentJoke>{currentJoke.setup}</CurrentJoke>
                 {currentJoke.punchline && <CurrentPunchline>{currentJoke.punchline}</CurrentPunchline>}
-                {nextJoke && <NextJoke>Next: {nextJoke.setup}</NextJoke>}
-              </>
+              </JokeSection>
             )}
 
             {practicing && !timer.running && setRecStatus !== 'requesting' && (
@@ -1305,7 +1334,6 @@ export default function SetDetail() {
               <OverlayNavBtn onClick={practicePrev} disabled={practiceIdx === 0}>
                 <ChevronLeft size={18} strokeWidth={2} />Prev
               </OverlayNavBtn>
-              <Button $variant="danger" onClick={stopPractice} style={{ flexShrink: 0 }}>Stop</Button>
               {practiceIdx === setJokes.length - 1
                 ? <OverlayNavBtn $primary onClick={stopPractice}>
                     Done <Check size={16} strokeWidth={2.5} />

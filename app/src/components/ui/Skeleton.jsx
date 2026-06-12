@@ -195,12 +195,17 @@ export function SetDetailSkeleton() {
     <SPage>
       <SHeader>
         <SkeletonLine $h={14} $w={24} style={{ flexShrink: 0 }} />
-        <SkeletonLine $h={16} style={{ maxWidth: '50%' }} />
+        <SkeletonLine $h={16} style={{ maxWidth: '40%' }} />
+        <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
+          <SkeletonLine $h={30} $w={56} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+          <SkeletonLine $h={30} $w={52} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+          <SkeletonLine $h={30} $w={72} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+        </div>
       </SHeader>
       <STimingBar>
         <SkeletonLine $h={12} $w={60} />
         <SkeletonLine $h={6} style={{ flex: 1 }} />
-        <SkeletonLine $h={12} $w={40} />
+        <SkeletonLine $h={12} $w={52} />
       </STimingBar>
       <SBody>
         {[0, 1, 2].map(i => <SJokeCardSkeleton key={i} />)}
@@ -340,17 +345,28 @@ const SReadContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 2rem 1.5rem;
-  max-width: 640px;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 720px;
   width: 100%;
-  margin: 0 auto;
+  align-self: center;
 `;
 
 const SReadNav = styled.div`
   display: flex;
   gap: 0.75rem;
-  padding-top: 1.5rem;
-  margin-top: auto;
+  padding: 1rem 2rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg};
+`;
+
+const SPunchlineBlock = styled.div`
+  border-left: 3px solid ${({ theme }) => theme.primary};
+  padding-left: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 export function SetReadThroughSkeleton() {
@@ -358,20 +374,95 @@ export function SetReadThroughSkeleton() {
     <SReadPage>
       <STopBar>
         <SkeletonLine $h={14} $w={130} />
-        <SkeletonLine $h={12} $w={36} />
+        <SkeletonLine $h={12} $w={40} />
         <SkeletonLine $h={24} $w={24} style={{ borderRadius: '0.25rem' }} />
       </STopBar>
       <SReadContent>
-        <SkeletonLine $h={12} $w={52} style={{ marginBottom: '1.25rem', borderRadius: '99px' }} />
-        <SkeletonLine $h={28} style={{ marginBottom: '0.75rem' }} />
-        <SkeletonLine $h={28} style={{ marginBottom: '1.5rem', maxWidth: '72%' }} />
-        <SkeletonLine $h={14} $w={110} />
-        <SReadNav>
-          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
-          <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
-        </SReadNav>
+        <SkeletonLine $h={13} $w={52} style={{ marginBottom: '0.75rem' }} />
+        <SkeletonLine $h={26} style={{ marginBottom: '0.625rem' }} />
+        <SkeletonLine $h={26} style={{ marginBottom: '1.25rem', maxWidth: '68%' }} />
+        <SPunchlineBlock>
+          <SkeletonLine $h={20} />
+          <SkeletonLine $h={20} style={{ maxWidth: '80%' }} />
+        </SPunchlineBlock>
       </SReadContent>
+      <SReadNav>
+        <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
+        <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
+      </SReadNav>
     </SReadPage>
+  );
+}
+
+const SPracticeOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: ${({ theme }) => theme.bg};
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+`;
+
+const SPracticeTopBar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem 0;
+  flex-shrink: 0;
+`;
+
+const SPracticeBody = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  gap: 0;
+`;
+
+const SPracticeJoke = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 90vw);
+  text-align: left;
+  margin-top: 1.5rem;
+`;
+
+const SPracticeNav = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+`;
+
+export function SetPracticeOverlaySkeleton() {
+  return (
+    <SPracticeOverlay>
+      <SPracticeTopBar>
+        <SkeletonLine $h={24} $w={24} style={{ borderRadius: '0.25rem' }} />
+      </SPracticeTopBar>
+      <SPracticeBody>
+        {/* Timer */}
+        <SkeletonLine $h={96} $w={260} style={{ borderRadius: '0.5rem', marginBottom: '0.75rem' }} />
+        {/* Target */}
+        <SkeletonLine $h={22} $w={110} style={{ marginBottom: '2rem' }} />
+        {/* Joke section */}
+        <SPracticeJoke>
+          <SkeletonLine $h={16} $w={90} style={{ marginBottom: '1rem' }} />
+          <SkeletonLine $h={26} style={{ marginBottom: '0.625rem' }} />
+          <SkeletonLine $h={26} style={{ marginBottom: '1.25rem', maxWidth: '72%' }} />
+          <SPunchlineBlock>
+            <SkeletonLine $h={20} />
+            <SkeletonLine $h={20} style={{ maxWidth: '78%' }} />
+          </SPunchlineBlock>
+        </SPracticeJoke>
+      </SPracticeBody>
+      <SPracticeNav>
+        <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
+        <SkeletonLine $h={48} style={{ flex: 1, borderRadius: '0.375rem' }} />
+      </SPracticeNav>
+    </SPracticeOverlay>
   );
 }
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import Button from '../components/ui/Button';
 import { useResource } from '../hooks/useResource';
 import { SetReadThroughSkeleton } from '../components/ui/Skeleton';
 
@@ -46,56 +45,51 @@ const Content = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 2rem 6rem;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 720px;
+  width: 100%;
+  align-self: center;
 
   @media (min-width: 768px) {
-    padding: 2rem 3rem 6rem;
+    padding: 2.5rem 3rem;
   }
 
   @media (max-width: 400px) {
-    padding: 1.25rem 1rem 6rem;
+    padding: 1.25rem 1rem;
   }
 `;
 
 const JokeNumber = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: ${({ theme }) => theme.primary};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 `;
 
 const Setup = styled.h2`
-  font-size: clamp(1.4rem, 3.5vw, 2.5rem);
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
   font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 1.5rem;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
 `;
 
-const PunchlineToggle = styled.button`
-  font-size: clamp(0.95rem, 2vw, 1.15rem);
-  color: ${({ theme }) => theme.textMuted};
-  text-decoration: underline;
-  padding: 0;
-  cursor: pointer;
-  margin-bottom: 1rem;
-  text-align: left;
-`;
 
 const Punchline = styled.p`
-  font-size: clamp(1.25rem, 3vw, 2.1rem);
-  line-height: 1.45;
+  font-size: clamp(1.1rem, 2vw, 1.55rem);
+  line-height: 1.5;
   color: ${({ theme }) => theme.text};
   border-left: 3px solid ${({ theme }) => theme.primary};
   padding-left: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 `;
 
 const Notes = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   font-style: italic;
 `;
 
@@ -136,11 +130,6 @@ const NavBtn = styled.button`
   &:disabled { opacity: 0.3; cursor: not-allowed; }
 `;
 
-const CallbackNote = styled.div`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.warning};
-  margin-bottom: 1rem;
-`;
 
 export default function SetReadThrough() {
   const { id } = useParams();
@@ -148,13 +137,10 @@ export default function SetReadThrough() {
   const { items: sets, loading: setsLoading } = useResource('sets');
   const { items: jokes, loading: jokesLoading } = useResource('jokes');
   const [index, setIndex] = useState(0);
-  const [showPunchline, setShowPunchline] = useState(false);
 
   const set = sets.find(s => s.id === id);
   const jokeMap = Object.fromEntries(jokes.map(j => [j.id, j]));
   const setJokes = set ? (set.joke_ids || []).map(jid => jokeMap[jid]).filter(Boolean) : [];
-
-  useEffect(() => { setShowPunchline(false); }, [index]);
 
   useEffect(() => {
     if (set) document.title = `${set.name} | My Tight Five`;
@@ -171,7 +157,6 @@ export default function SetReadThrough() {
         setIndex(i => (i > 0 ? i - 1 : i));
       }
 
-      if (e.key === ' ') { e.preventDefault(); setShowPunchline(true); }
       if (e.key === 'Escape') navigate(`/sets/${id}`);
     }
     window.addEventListener('keydown', handleKey);
@@ -203,7 +188,6 @@ export default function SetReadThrough() {
   }
 
   const joke = setJokes[index];
-  const callbackJoke = joke.callback_to ? jokeMap[joke.callback_to] : null;
   const isLast = index === setJokes.length - 1;
 
   return (
@@ -217,20 +201,9 @@ export default function SetReadThrough() {
       <Content>
         <JokeNumber>Joke {index + 1}</JokeNumber>
 
-        {callbackJoke && (
-          <CallbackNote>Callback to: "{callbackJoke.setup?.slice(0, 60)}"</CallbackNote>
-        )}
-
         <Setup>{joke.setup}</Setup>
 
-        {joke.punchline && (
-          <>
-            {!showPunchline && (
-              <PunchlineToggle onClick={() => setShowPunchline(true)}>Show punchline</PunchlineToggle>
-            )}
-            {showPunchline && <Punchline>{joke.punchline}</Punchline>}
-          </>
-        )}
+        {joke.punchline && <Punchline>{joke.punchline}</Punchline>}
 
         {joke.notes && <Notes>{joke.notes}</Notes>}
       </Content>
@@ -240,8 +213,7 @@ export default function SetReadThrough() {
           <ChevronLeft size={18} strokeWidth={2} />
           Prev
         </NavBtn>
-        <Button $variant="danger" onClick={() => navigate(`/sets/${id}`)} style={{ flexShrink: 0 }}>Stop</Button>
-        {isLast
+{isLast
           ? <NavBtn $primary onClick={() => navigate(`/sets/${id}`)}>
               Done
               <Check size={16} strokeWidth={2.5} />
