@@ -190,19 +190,24 @@ const SortableItem = styled.div`
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
   margin-bottom: 0.5rem;
-  cursor: grab;
   opacity: ${({ $dragging }) => $dragging ? 0.5 : 1};
   transition: box-shadow 0.15s;
 
-  &:active { cursor: grabbing; }
   &:hover { box-shadow: ${({ theme }) => theme.shadow}; }
 `;
 
 const DragHandle = styled.span`
   color: ${({ theme }) => theme.textMuted};
   flex-shrink: 0;
-  padding-top: 0.125rem;
   opacity: 0.5;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  touch-action: none;
+
+  &:active { cursor: grabbing; }
 `;
 
 const JokeInfo = styled.div`
@@ -728,7 +733,7 @@ const SetRecAudio = styled.audio`
 
 function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
   const navigate = useNavigate();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   if (!joke) return null;
@@ -739,8 +744,8 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
   const callbackJoke = joke.callback_to ? jokeMap?.[joke.callback_to] : null;
 
   return (
-    <SortableItem ref={setNodeRef} style={style} $dragging={isDragging} $color={color} {...attributes} {...listeners}>
-      <DragHandle><GripVertical size={16} strokeWidth={2} /></DragHandle>
+    <SortableItem ref={setNodeRef} style={style} $dragging={isDragging} $color={color} {...attributes}>
+      <DragHandle ref={setActivatorNodeRef} {...listeners}><GripVertical size={16} strokeWidth={2} /></DragHandle>
       <JokeInfo>
         <JokeSetup>{joke.setup || 'Untitled'}</JokeSetup>
 
@@ -859,7 +864,7 @@ export default function SetDetail() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 10 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
