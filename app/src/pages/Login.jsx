@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { signIn } from '../utils/cognito';
 import Button from '../components/ui/Button';
@@ -62,6 +63,25 @@ const FooterLinks = styled.div`
   }
 `;
 
+const PasswordWrapper = styled.div`
+  position: relative;
+`;
+
+const ToggleButton = styled.button`
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: ${({ theme }) => theme.textMuted};
+  display: flex;
+  align-items: center;
+  &:hover { color: ${({ theme }) => theme.text}; }
+`;
+
 const Error = styled.p`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.danger};
@@ -77,6 +97,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -117,13 +138,23 @@ export default function Login() {
           </FormGroup>
           <FormGroup>
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
+            <PasswordWrapper>
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                style={{ paddingRight: '2.25rem' }}
+              />
+              <ToggleButton
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </ToggleButton>
+            </PasswordWrapper>
           </FormGroup>
           {error && <Error>{error}</Error>}
           <Button

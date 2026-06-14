@@ -239,7 +239,10 @@ export default function JokeEdit() {
 
   async function handleSave() {
     if (!form.setup.trim()) return toast.error('Add a setup first');
-    if (recordingStatus === 'recorded' || recordingStatus === 'recording') {
+    if (recordingStatus === 'recording' || recordingStatus === 'requesting') {
+      return toast.error('Stop recording before saving');
+    }
+    if (recordingStatus === 'recorded') {
       setUnsavedRecordingConfirm(true);
       return;
     }
