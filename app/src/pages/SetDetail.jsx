@@ -286,6 +286,31 @@ const JokeCategory = styled.span`
 
 const FooterSpacer = styled.div`flex: 1;`;
 
+const ModeBar = styled.div`
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: ${({ theme }) => theme.bg};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  position: sticky;
+  top: 4rem;
+  z-index: 9;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const DesktopActions = styled.div`
+  display: none;
+  gap: 0.375rem;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
 const RecordingBar = styled.div`
   display: flex;
   align-items: center;
@@ -1147,7 +1172,7 @@ export default function SetDetail() {
         title={set.name}
         back="/sets"
         actions={
-          <>
+          <DesktopActions>
             {jokesWithAudio.length > 0 && (
               <Button $variant="ghost" $size="sm" onClick={listening ? stopListening : startListening}>
                 <Headphones size={14} strokeWidth={2} />{listening ? 'Stop' : 'Listen'}
@@ -1155,9 +1180,18 @@ export default function SetDetail() {
             )}
             <Button $variant="ghost" $size="sm" onClick={() => navigate(`/sets/${id}/read`)}>Read</Button>
             <Button $size="sm" onClick={startPractice}>Practice</Button>
-          </>
+          </DesktopActions>
         }
       />
+      <ModeBar>
+        {jokesWithAudio.length > 0 && (
+          <Button $variant="ghost" $size="sm" onClick={listening ? stopListening : startListening}>
+            <Headphones size={14} strokeWidth={2} />{listening ? 'Stop' : 'Listen'}
+          </Button>
+        )}
+        <Button $variant="ghost" $size="sm" onClick={() => navigate(`/sets/${id}/read`)}>Read</Button>
+        <Button $size="sm" onClick={startPractice}>Practice</Button>
+      </ModeBar>
 
       {setRecStatus === 'done' && set.audio_url && (
         <RecordingBar>
