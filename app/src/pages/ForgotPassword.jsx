@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
+import Logo from '../components/Logo';
 
 const Page = styled.div`
   min-height: 100dvh;
@@ -28,15 +29,22 @@ const Box = styled.div`
   }
 `;
 
+const BrandWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+`;
+
 const AppName = styled.h1`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.accent};
   text-align: center;
-  margin-bottom: 0.25rem;
 `;
 
 const Tagline = styled.p`
@@ -123,7 +131,10 @@ export default function ForgotPassword() {
   return (
     <Page>
       <Box>
-        <AppName>My Tight Five</AppName>
+        <BrandWrap>
+          <Logo size={56} />
+          <AppName>My Tight Five</AppName>
+        </BrandWrap>
         <Tagline>
           {mode === 'request' ? 'Reset your password.' : 'Check your email for a reset code.'}
         </Tagline>

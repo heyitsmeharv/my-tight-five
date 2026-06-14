@@ -9,6 +9,7 @@ import { useResource } from '../hooks/useResource';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Button from '../components/ui/Button';
+import Logo from '../components/Logo';
 import StageBadge from '../components/ui/StageBadge';
 import InlinePlayer from '../components/ui/InlinePlayer';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
@@ -58,13 +59,16 @@ const Header = styled.div`
   }
 `;
 
-const AppTitle = styled.h1`
+const Brand = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.accent};
 `;
 
 const HeaderActions = styled.div`
@@ -356,7 +360,7 @@ export default function Dashboard() {
   return (
     <Page>
       <Header>
-        <AppTitle>My Tight Five</AppTitle>
+        <Brand><Logo size={24} />My Tight Five</Brand>
         <HeaderActions>
           <Button $variant="ghost" $size="sm" onClick={toggle}>{mode === 'dark' ? 'Light' : 'Dark'}</Button>
           <Button $variant="ghost" $size="sm" onClick={logout}>Sign out</Button>

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Home, Lightbulb, Mic2, List, Sun, Moon, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import Logo from './Logo';
 
 const Wrap = styled.nav`
   width: 12.5rem;
@@ -26,12 +27,15 @@ const Brand = styled.div`
   padding: 0 1.25rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
   font-family: ${({ theme }) => theme.fontMono};
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.accent};
 `;
 
 const NavItems = styled.div`
@@ -118,7 +122,7 @@ export default function Sidebar() {
 
   return (
     <Wrap>
-      <Brand>My Tight Five</Brand>
+      <Brand><Logo size={28} />My Tight Five</Brand>
 
       <NavItems>
         {NAV_ITEMS.map(({ to, label, icon: Icon, exact }) => (

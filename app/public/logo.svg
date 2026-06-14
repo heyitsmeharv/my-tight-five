@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 52">
+  <defs>
+    <clipPath id="h">
+      <ellipse cx="18" cy="7" rx="6" ry="7"/>
+    </clipPath>
+    <style>
+      .stand { fill: #000; }
+      .stand-stroke { stroke: #000; }
+      @media (prefers-color-scheme: dark) {
+        .stand { fill: #c49228; }
+        .stand-stroke { stroke: #c49228; }
+      }
+    </style>
+  </defs>
+  <!-- Stand -->
+  <rect class="stand" x="17.25" y="15" width="1.5" height="28" rx="0.75"/>
+  <path class="stand-stroke" d="M7 44 Q18 49 29 44" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse class="stand" cx="7"  cy="44" rx="3.5" ry="2"/>
+  <ellipse class="stand" cx="29" cy="44" rx="3.5" ry="2"/>
+  <ellipse class="stand" cx="18" cy="49" rx="3.5" ry="2"/>
+  <!-- Capsule -->
+  <ellipse cx="18" cy="7" rx="6" ry="7" fill="#c49228"/>
+  <ellipse cx="18" cy="6" rx="4.5" ry="5"   fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.9" clip-path="url(#h)"/>
+  <ellipse cx="18" cy="6" rx="2.8" ry="3.1" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.9" clip-path="url(#h)"/>
+  <ellipse cx="18" cy="6" rx="1.2" ry="1.4" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.9" clip-path="url(#h)"/>
+  <circle cx="18" cy="6" r="0.5" fill="rgba(0,0,0,0.22)"/>
+  <!-- Collar -->
+  <rect cx="18" cy="14" x="13.5" y="13" width="9" height="2" rx="1" fill="#c49228"/>
+</svg>
