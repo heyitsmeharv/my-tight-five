@@ -7,12 +7,19 @@ const Btn = styled.button`
   align-items: center;
   gap: 0.3125rem;
   font-family: ${({ theme }) => theme.fontMono};
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   color: ${({ $active, theme }) => $active ? theme.primary : theme.accent};
   border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.accent};
   background: ${({ $active, theme }) => $active ? 'transparent' : theme.accentLight};
-  padding: 0.4rem 0.75rem;
+  padding: 0.25rem 0.5rem;
+  min-height: 2.25rem;
+
+  @media (min-width: 480px) {
+    min-height: 1.75rem;
+    font-size: 0.62rem;
+    padding: 0.4rem 0.75rem;
+  }
   border-radius: 0.25rem;
   opacity: ${({ $active }) => $active ? 1 : 0.85};
   transition: all 0.15s;
@@ -90,7 +97,8 @@ export default function InlinePlayer({ url, showLoop }) {
     e.preventDefault();
     setErrored(false);
     const a = getAudio();
-    a.play().catch(() => {
+    a.play().catch((err) => {
+      if (err.name === 'AbortError') return;
       audio.current = null;
       setErrored(true);
       setState('idle');
