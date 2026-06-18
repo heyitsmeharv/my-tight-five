@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack, ChevronDown, ChevronLeft, ChevronRight, Check, Mic, StopCircle, Trash2 } from 'lucide-react';
+import { GripVertical, X, Plus, CornerDownLeft, Pencil, Headphones, SkipForward, SkipBack, ChevronDown, ChevronLeft, ChevronRight, Check, Mic, StopCircle, Trash2, Repeat } from 'lucide-react';
 import { getAudioUploadUrl, deleteAudioFile } from '../utils/api';
 import {
   DndContext,
@@ -333,6 +333,10 @@ const RecordingBarLabel = styled.span`
   letter-spacing: 0.08em;
   color: ${({ theme }) => theme.textMuted};
   flex-shrink: 0;
+`;
+
+const ListenLoopBtn = styled(Button)`
+  color: ${({ $on, theme }) => $on ? theme.primary : 'inherit'};
 `;
 
 const ListenBar = styled.div`
@@ -804,10 +808,13 @@ export default function SetDetail() {
   const [targetInput, setTargetInput] = useState('');
   const [listening, setListening] = useState(false);
   const [listenIdx, setListenIdx] = useState(0);
+  const [listenLoop, setListenLoop] = useState(false);
   const listenAudio = useRef(null);
   const listeningRef = useRef(false);
+  const listenLoopRef = useRef(false);
   const timer = useTimer();
   useEffect(() => { listeningRef.current = listening; }, [listening]);
+  useEffect(() => { listenLoopRef.current = listenLoop; }, [listenLoop]);
   useEffect(() => () => { listenAudio.current?.pause(); }, []);
   useEffect(() => {
     if (!practicing) return;
@@ -889,6 +896,7 @@ export default function SetDetail() {
     if (!listeningRef.current && idx > 0) return;
     if (listenAudio.current) listenAudio.current.pause();
     if (idx >= jokesWithAudio.length) {
+      if (listenLoopRef.current) { playAtIdx(0); return; }
       setListening(false);
       setListenIdx(0);
       listenAudio.current = null;
@@ -1260,6 +1268,7 @@ export default function SetDetail() {
           <ListenCount>{listenIdx + 1} / {jokesWithAudio.length}</ListenCount>
           <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx - 1)} disabled={listenIdx === 0} title="Previous"><SkipBack size={13} strokeWidth={2} /></Button>
           <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx + 1)} title="Skip"><SkipForward size={13} strokeWidth={2} /></Button>
+          <ListenLoopBtn $variant="ghost" $size="sm" $on={listenLoop} onClick={() => setListenLoop(v => !v)} title={listenLoop ? 'Loop on' : 'Loop off'}><Repeat size={13} strokeWidth={2} /></ListenLoopBtn>
         </ListenBar>
       )}
 
