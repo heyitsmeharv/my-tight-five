@@ -344,7 +344,7 @@ export default function Jokes() {
         <JokeCard $i={animI} $color={color} onClick={() => navigate(`/jokes/${joke.id}`)}>
           <CardSetup>{joke.setup || 'Untitled'}</CardSetup>
           {joke.punchline && <CardPunchline>{joke.punchline}</CardPunchline>}
-          {joke.notes && <CardNotes>{joke.notes}</CardNotes>}
+          {joke.followup && <CardNotes>{joke.followup}</CardNotes>}
           {joke.callback_to && callbackJoke && (
             <CallbackLink
               title={callbackJoke.setup || 'Jump to callback joke'}

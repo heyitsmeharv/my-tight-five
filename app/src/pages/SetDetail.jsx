@@ -590,6 +590,13 @@ const CurrentPunchline = styled.div`
   margin-bottom: 1.25rem;
 `;
 
+const CurrentFollowup = styled.div`
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  line-height: 1.5;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 1.25rem;
+`;
+
 
 const OverlayRecSection = styled.div`
   display: flex;
@@ -1201,7 +1208,7 @@ export default function SetDetail() {
       {setRecStatus === 'done' && set.audio_url && (
         <RecordingBar>
           <RecordingBarLabel>Recording</RecordingBarLabel>
-          <InlinePlayer url={set.audio_url} />
+          <InlinePlayer url={set.audio_url} showLoop />
           <Button $variant="ghost" $size="sm" onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
             <Trash2 size={13} strokeWidth={2} />Delete
           </Button>
@@ -1340,6 +1347,7 @@ export default function SetDetail() {
                 <OverlayProgress>Joke {practiceIdx + 1} / {setJokes.length}</OverlayProgress>
                 <CurrentJoke>{currentJoke.setup}</CurrentJoke>
                 {currentJoke.punchline && <CurrentPunchline>{currentJoke.punchline}</CurrentPunchline>}
+                {currentJoke.followup && <CurrentFollowup>{currentJoke.followup}</CurrentFollowup>}
               </JokeSection>
             )}
 

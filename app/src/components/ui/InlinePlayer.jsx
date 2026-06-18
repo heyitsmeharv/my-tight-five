@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { Play, Pause, Square, AlertCircle } from 'lucide-react';
+import { Play, Pause, Square, AlertCircle, Repeat } from 'lucide-react';
 
 const Btn = styled.button`
   display: flex;
@@ -25,7 +25,6 @@ const StopBtn = styled(Btn)`
   color: ${({ theme }) => theme.textMuted};
   border-color: ${({ theme }) => theme.border};
   background: transparent;
-  padding: 0.4rem 0.5rem;
 `;
 
 const ErrBtn = styled(Btn)`
@@ -35,14 +34,21 @@ const ErrBtn = styled(Btn)`
   opacity: 0.8;
 `;
 
+const LoopBtn = styled(Btn)`
+  color: ${({ $active, theme }) => $active ? theme.primary : theme.textMuted};
+  border-color: ${({ $active, theme }) => $active ? theme.primary : theme.border};
+  background: transparent;
+`;
+
 const Group = styled.span`
   display: inline-flex;
   gap: 0.25rem;
 `;
 
-export default function InlinePlayer({ url }) {
+export default function InlinePlayer({ url, showLoop }) {
   const [state, setState] = useState('idle'); // idle | playing | paused
   const [errored, setErrored] = useState(false);
+  const [looping, setLooping] = useState(false);
   const audio = useRef(null);
 
   useEffect(() => () => audio.current?.pause(), []);
@@ -60,6 +66,7 @@ export default function InlinePlayer({ url }) {
   function getAudio() {
     if (audio.current) return audio.current;
     const a = new Audio(url);
+    a.loop = looping;
     a.onended = () => setState('idle');
     a.onerror = () => {
       audio.current = null;
@@ -68,6 +75,14 @@ export default function InlinePlayer({ url }) {
     };
     audio.current = a;
     return a;
+  }
+
+  function toggleLoop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const next = !looping;
+    setLooping(next);
+    if (audio.current) audio.current.loop = next;
   }
 
   function play(e) {
@@ -113,10 +128,18 @@ export default function InlinePlayer({ url }) {
 
   if (state === 'idle') {
     return (
-      <Btn onClick={play} $active={false} title="Play recording">
-        <Play size={13} strokeWidth={2.5} />
-        PLAY
-      </Btn>
+      <Group>
+        <Btn onClick={play} $active={false} title="Play recording">
+          <Play size={13} strokeWidth={2.5} />
+          PLAY
+        </Btn>
+        {showLoop && (
+          <LoopBtn onClick={toggleLoop} $active={looping} title={looping ? 'Loop on' : 'Loop off'}>
+            <Repeat size={11} strokeWidth={2.5} />
+            LOOP
+          </LoopBtn>
+        )}
+      </Group>
     );
   }
 
@@ -125,15 +148,24 @@ export default function InlinePlayer({ url }) {
       {state === 'playing' ? (
         <Btn onClick={pause} $active title="Pause">
           <Pause size={13} strokeWidth={2.5} />
+          PAUSE
         </Btn>
       ) : (
         <Btn onClick={play} $active={false} title="Resume">
           <Play size={13} strokeWidth={2.5} />
+          RESUME
         </Btn>
       )}
       <StopBtn onClick={stop} $active={false} title="Stop">
         <Square size={11} fill="currentColor" strokeWidth={0} />
+        STOP
       </StopBtn>
+      {showLoop && (
+        <LoopBtn onClick={toggleLoop} $active={looping} title={looping ? 'Loop on' : 'Loop off'}>
+          <Repeat size={11} strokeWidth={2.5} />
+          LOOP
+        </LoopBtn>
+      )}
     </Group>
   );
 }

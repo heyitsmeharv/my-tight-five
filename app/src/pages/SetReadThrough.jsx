@@ -93,6 +93,13 @@ const Notes = styled.p`
   font-style: italic;
 `;
 
+const Followup = styled.p`
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  line-height: 1.5;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 1.25rem;
+`;
+
 const Nav = styled.div`
   display: flex;
   gap: 0.75rem;
@@ -204,6 +211,8 @@ export default function SetReadThrough() {
         <Setup>{joke.setup}</Setup>
 
         {joke.punchline && <Punchline>{joke.punchline}</Punchline>}
+
+        {joke.followup && <Followup>{joke.followup}</Followup>}
 
         {joke.notes && <Notes>{joke.notes}</Notes>}
       </Content>

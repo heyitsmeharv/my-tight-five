@@ -161,6 +161,7 @@ export default function JokeEdit() {
   const [form, setForm] = useState({
     setup: fromIdea?.text || '',
     punchline: '',
+    followup: '',
     stage: 'draft',
     duration_seconds: '',
     notes: '',
@@ -206,6 +207,7 @@ export default function JokeEdit() {
         setForm({
           setup: joke.setup || '',
           punchline: joke.punchline || '',
+          followup: joke.followup || '',
           stage: (joke.stage && joke.stage !== 'idea') ? joke.stage : 'draft',
           duration_seconds: joke.duration_seconds || '',
           notes: joke.notes || '',
@@ -364,6 +366,13 @@ export default function JokeEdit() {
             value={form.punchline}
             rows={2}
             onChange={e => { set('punchline', e.target.value); autoResize(punchlineRef); }}
+          />
+          <Divider />
+          <BitTextarea
+            placeholder="Followup..."
+            value={form.followup}
+            rows={2}
+            onChange={e => set('followup', e.target.value)}
           />
         </WritingArea>
 

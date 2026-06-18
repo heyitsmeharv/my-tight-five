@@ -198,7 +198,7 @@ export default function Sets() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {set.audio_url && (
                       <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
-                        <InlinePlayer url={set.audio_url} />
+                        <InlinePlayer url={set.audio_url} showLoop />
                       </span>
                     )}
                     <span>
