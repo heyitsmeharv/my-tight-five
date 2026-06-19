@@ -474,7 +474,7 @@ const SVideoCard = styled.div`
   overflow: hidden;
 `;
 
-export function ProfilePageSkeleton() {
+export function ShowreelPageSkeleton() {
   return (
     <SPage style={{ maxWidth: '700px' }}>
       <SHeader>

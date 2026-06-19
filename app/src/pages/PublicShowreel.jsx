@@ -53,7 +53,7 @@ const Message = styled.div`
   font-size: 0.9rem;
 `;
 
-export default function PublicProfile() {
+export default function PublicShowreel() {
   const { profileId } = useParams();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +63,7 @@ export default function PublicProfile() {
     document.title = 'Showreel | My Tight Five';
     fetchPublicProfile(profileId)
       .then(data => setVideos(data.videos || []))
-      .catch(() => setError('Could not load this profile.'))
+      .catch(() => setError('Could not load this showreel.'))
       .finally(() => setLoading(false));
   }, [profileId]);
 

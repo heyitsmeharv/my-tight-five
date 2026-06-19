@@ -57,7 +57,7 @@ const NAV_ITEMS = [
   { to: '/ideas', label: 'Ideas', icon: Lightbulb },
   { to: '/jokes', label: 'Jokes', icon: Mic2 },
   { to: '/sets', label: 'Sets', icon: List },
-  { to: '/profile', label: 'Profile', icon: Video },
+  { to: '/showreel', label: 'Showreel', icon: Video },
 ];
 
 export default function BottomNav() {

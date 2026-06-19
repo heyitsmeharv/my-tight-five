@@ -9,7 +9,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
-import { ProfilePageSkeleton } from '../components/ui/Skeleton';
+import { ShowreelPageSkeleton } from '../components/ui/Skeleton';
 
 const Page = styled.div`
   display: flex;
@@ -146,9 +146,9 @@ function generateId() {
   return `vid_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export default function Profile() {
+export default function Showreel() {
   const { items: videos, loading, create, update, remove, reload } = useResource('videos');
-  const [profileId, setProfileId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [copying, setCopying] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -158,23 +158,23 @@ export default function Profile() {
   const [deleting, setDeleting] = useState(new Set());
   const xhrRef = useRef(null);
 
-  useEffect(() => { document.title = 'Profile | My Tight Five'; }, []);
+  useEffect(() => { document.title = 'Showreel | My Tight Five'; }, []);
 
   useEffect(() => {
-    getUserId().then(setProfileId).catch(() => {});
+    getUserId().then(setUserId).catch(() => {});
   }, []);
 
   const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-  const profileUrl = profileId ? `${appUrl}/u/${profileId}` : '';
+  const showreelUrl = userId ? `${appUrl}/u/${userId}` : '';
 
-  async function copyProfileUrl() {
-    if (!profileUrl) return;
-    await navigator.clipboard.writeText(profileUrl);
+  async function copyShowreelUrl() {
+    if (!showreelUrl) return;
+    await navigator.clipboard.writeText(showreelUrl);
     setCopying(true);
     setTimeout(() => setCopying(false), 1500);
   }
 
-  const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+  const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
 
   function handleFileSelect(e) {
     const file = e.target.files?.[0];
@@ -254,7 +254,7 @@ export default function Profile() {
     }
   }
 
-  if (loading) return <ProfilePageSkeleton />;
+  if (loading) return <ShowreelPageSkeleton />;
 
   const sortedVideos = [...videos].sort((a, b) =>
     new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0)
@@ -262,13 +262,13 @@ export default function Profile() {
 
   return (
     <Page>
-      <PageHeader title="Profile" back="/" />
+      <PageHeader title="Showreel" back="/" />
       <Body>
-        {profileUrl && (
+        {showreelUrl && (
           <ShareBar>
             <Globe size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
-            <ShareLabel>{profileUrl}</ShareLabel>
-            <Button $size="sm" $variant="ghost" onClick={copyProfileUrl}>
+            <ShareLabel>{showreelUrl}</ShareLabel>
+            <Button $size="sm" $variant="ghost" onClick={copyShowreelUrl}>
               {copying ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={2} />}
               {copying ? 'Copied' : 'Copy link'}
             </Button>

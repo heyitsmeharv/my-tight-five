@@ -18,8 +18,8 @@ import JokeEdit from './pages/JokeEdit';
 import Sets from './pages/Sets';
 import SetDetail from './pages/SetDetail';
 import SetReadThrough from './pages/SetReadThrough';
-import Profile from './pages/Profile';
-import PublicProfile from './pages/PublicProfile';
+import Showreel from './pages/Showreel';
+import PublicShowreel from './pages/PublicShowreel';
 
 const Main = styled.main`
   flex: 1;
@@ -78,8 +78,8 @@ export default function App() {
           <Route path="/sets" element={<ProtectedRoute><Sets /></ProtectedRoute>} />
           <Route path="/sets/:id" element={<ProtectedRoute><SetDetail /></ProtectedRoute>} />
           <Route path="/sets/:id/read" element={<ProtectedRoute><SetReadThrough /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/u/:profileId" element={<PublicProfile />} />
+          <Route path="/showreel" element={<ProtectedRoute><Showreel /></ProtectedRoute>} />
+          <Route path="/u/:profileId" element={<PublicShowreel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
