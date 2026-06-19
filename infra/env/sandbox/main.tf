@@ -33,6 +33,26 @@ module "cognito" {
   environment = var.environment
 }
 
+module "video_bucket" {
+  source = "../../modules/s3"
+
+  project            = var.project
+  environment        = var.environment
+  bucket_name        = "${var.project}-${var.environment}-videos"
+  versioning_enabled = false
+
+  cors_rules = [{
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "GET", "HEAD"]
+    allowed_origins = [
+      "https://${var.domain}",
+      "https://www.${var.domain}",
+      "http://localhost:5173",
+    ]
+    max_age_seconds = 3600
+  }]
+}
+
 module "lambda" {
   source = "../../modules/lambda"
 
@@ -43,6 +63,8 @@ module "lambda" {
   dynamodb_table_arn = module.dynamodb.table_arn
   audio_bucket_name  = module.audio_bucket.bucket_name
   audio_bucket_arn   = module.audio_bucket.bucket_arn
+  video_bucket_name  = module.video_bucket.bucket_name
+  video_bucket_arn   = module.video_bucket.bucket_arn
 }
 
 module "api_cert" {

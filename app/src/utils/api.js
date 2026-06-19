@@ -59,3 +59,30 @@ export async function getAudioUploadUrl(jokeId, mimeType) {
   if (!res.ok) throw new Error(`Failed to get upload URL: ${res.status}`);
   return res.json();
 }
+
+export function deleteVideoFile(videoId) {
+  return del(`/video?videoId=${encodeURIComponent(videoId)}`);
+}
+
+export async function getVideoUploadUrl(videoId, mimeType) {
+  let token = '';
+  try {
+    token = await getIdToken();
+  } catch {
+    // expired session - fetch will fail with 401
+  }
+  const res = await fetch(
+    `${BASE}/video-upload-url?videoId=${encodeURIComponent(videoId)}&mimeType=${encodeURIComponent(mimeType)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) throw new Error(`Failed to get upload URL: ${res.status}`);
+  return res.json();
+}
+
+const PROFILE_API_URL = import.meta.env.VITE_PROFILE_API_URL || '';
+
+export async function fetchPublicProfile(profileId) {
+  const res = await fetch(`${PROFILE_API_URL}?profileId=${encodeURIComponent(profileId)}`);
+  if (!res.ok) throw new Error(`Failed to load profile: ${res.status}`);
+  return res.json();
+}

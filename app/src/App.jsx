@@ -18,6 +18,8 @@ import JokeEdit from './pages/JokeEdit';
 import Sets from './pages/Sets';
 import SetDetail from './pages/SetDetail';
 import SetReadThrough from './pages/SetReadThrough';
+import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 
 const Main = styled.main`
   flex: 1;
@@ -31,11 +33,12 @@ const Main = styled.main`
 function Layout({ children }) {
   const { pathname } = useLocation();
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
-  const hideNav = isAuthPage || pathname.endsWith('/read');
+  const isPublicPage = pathname.startsWith('/u/');
+  const hideNav = isAuthPage || isPublicPage || pathname.endsWith('/read');
 
   return (
     <>
-      {!isAuthPage && <Sidebar />}
+      {!isAuthPage && !isPublicPage && <Sidebar />}
       <Main>
         {children}
       </Main>
@@ -75,6 +78,8 @@ export default function App() {
           <Route path="/sets" element={<ProtectedRoute><Sets /></ProtectedRoute>} />
           <Route path="/sets/:id" element={<ProtectedRoute><SetDetail /></ProtectedRoute>} />
           <Route path="/sets/:id/read" element={<ProtectedRoute><SetReadThrough /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/u/:profileId" element={<PublicProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

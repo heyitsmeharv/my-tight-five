@@ -124,6 +124,19 @@ export async function getIdToken() {
   return session.idToken;
 }
 
+export async function getUserId() {
+  if (IS_DEV_MOCK) return 'dev-mock-user';
+  const session = await getValidSession();
+  if (!session?.idToken) throw new Error('Not authenticated');
+  try {
+    const payload = session.idToken.split('.')[1];
+    const { sub } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return sub;
+  } catch {
+    throw new Error('Could not decode user ID');
+  }
+}
+
 export async function signIn(email, password) {
   if (IS_DEV_MOCK) return null;
   const data = await cognitoRequest('InitiateAuth', {

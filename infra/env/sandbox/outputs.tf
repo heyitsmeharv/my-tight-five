@@ -32,3 +32,8 @@ output "cognito_client_id" {
   description = "Cognito App Client ID - injected as VITE_COGNITO_CLIENT_ID during the frontend build"
   value       = module.cognito.user_pool_client_id
 }
+
+output "profile_api_url" {
+  description = "Public profile Lambda Function URL - inject as VITE_PROFILE_API_URL"
+  value       = module.lambda.profile_function_url
+}

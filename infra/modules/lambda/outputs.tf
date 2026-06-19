@@ -5,3 +5,7 @@ output "function_name" {
 output "invoke_arn" {
   value = aws_lambda_function.api.invoke_arn
 }
+
+output "profile_function_url" {
+  value = aws_lambda_function_url.profile.function_url
+}

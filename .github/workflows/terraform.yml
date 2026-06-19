@@ -38,11 +38,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install backend dependencies
-        working-directory: infra/modules/lambda/src
-        run: npm install
+        run: |
+          npm install --prefix infra/modules/lambda/functions/api
+          npm install --prefix infra/modules/lambda/functions/profile
 
       - name: Test backend
-        working-directory: infra/modules/lambda/src
+        working-directory: infra/modules/lambda/functions/api
         run: npm run test --if-present
 
       - name: Install frontend dependencies
@@ -94,8 +95,9 @@ jobs:
           tflint --version
 
       - name: Install Lambda dependencies
-        working-directory: infra/modules/lambda/src
-        run: npm install
+        run: |
+          npm install --prefix infra/modules/lambda/functions/api
+          npm install --prefix infra/modules/lambda/functions/profile
 
       - name: Validate (fmt + validate + tflint)
         run: bash -euo pipefail infra/scripts/validate.sh ${{ matrix.environment }}
@@ -158,10 +160,13 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.VITE_COGNITO_CLIENT_ID }}
+          VITE_PROFILE_API_URL: ${{ secrets.VITE_PROFILE_API_URL }}
+          VITE_APP_URL: ${{ vars.VITE_APP_URL }}
 
       - name: Install Lambda dependencies
-        working-directory: infra/modules/lambda/src
-        run: npm install
+        run: |
+          npm install --prefix infra/modules/lambda/functions/api
+          npm install --prefix infra/modules/lambda/functions/profile
 
       - name: Validate (fmt + validate + tflint)
         run: bash -euo pipefail infra/scripts/validate.sh ${{ inputs.environment }}
