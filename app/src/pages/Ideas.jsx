@@ -217,7 +217,7 @@ export default function Ideas() {
           value={text}
           onChange={e => setText(e.target.value)}
         />
-        <Button type="submit" disabled={saving || !text.trim()}><Plus size={16} strokeWidth={2} /></Button>
+        <Button type="submit" $loading={saving} disabled={saving || !text.trim()}><Plus size={16} strokeWidth={2} /></Button>
       </CaptureBar>
 
       <IdeaList>

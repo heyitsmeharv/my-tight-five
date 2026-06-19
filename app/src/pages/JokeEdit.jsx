@@ -457,8 +457,8 @@ export default function JokeEdit() {
         )}
 
         <SaveRow>
-          <Button onClick={handleSave} disabled={saving} style={{ flex: 1 }}>
-            {saving ? 'Saving...' : isNew ? 'Save Joke' : 'Save'}
+          <Button onClick={handleSave} $loading={saving} disabled={saving} style={{ flex: 1 }}>
+            {isNew ? 'Save Joke' : 'Save'}
           </Button>
         </SaveRow>
       </Body>

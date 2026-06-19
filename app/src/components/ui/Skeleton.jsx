@@ -466,6 +466,43 @@ export function SetPracticeOverlaySkeleton() {
   );
 }
 
+const SVideoCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: ${({ theme }) => theme.radius};
+  background: ${({ theme }) => theme.bgCard};
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+`;
+
+export function ProfilePageSkeleton() {
+  return (
+    <SPage style={{ maxWidth: '700px' }}>
+      <SHeader>
+        <SkeletonLine $h={14} $w={24} style={{ flexShrink: 0 }} />
+        <SkeletonLine $h={16} style={{ maxWidth: '25%' }} />
+      </SHeader>
+      <div style={{ padding: '1rem' }}>
+        <SCard style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+          <SkeletonLine $h={14} $w={14} style={{ flexShrink: 0 }} />
+          <SkeletonLine $h={12} style={{ flex: 1 }} />
+          <SkeletonLine $h={28} $w={90} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+        </SCard>
+        <SkeletonLine $h={100} style={{ borderRadius: '0.5rem', marginBottom: '1.25rem' }} />
+        {[0, 1].map(i => (
+          <SVideoCard key={i}>
+            <SkeletonLine $h={180} style={{ borderRadius: 0 }} />
+            <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <SkeletonLine $h={14} style={{ flex: 1 }} />
+              <SkeletonLine $h={28} $w={72} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+              <SkeletonLine $h={28} $w={32} style={{ borderRadius: '0.375rem', flexShrink: 0 }} />
+            </div>
+          </SVideoCard>
+        ))}
+      </div>
+    </SPage>
+  );
+}
+
 export function DashboardSkeleton() {
   return (
     <SPage>

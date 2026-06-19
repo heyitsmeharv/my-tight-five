@@ -282,7 +282,7 @@ export default function Sets() {
               </FormGroup>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <Button type="button" $variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Button>
-                <Button type="submit" disabled={saving} style={{ flex: 1 }}>Create</Button>
+                <Button type="submit" $loading={saving} disabled={saving} style={{ flex: 1 }}>Create</Button>
               </div>
             </form>
           </Card>

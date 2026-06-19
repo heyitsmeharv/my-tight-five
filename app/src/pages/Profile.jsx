@@ -3,12 +3,13 @@ import styled from 'styled-components';
 import { toast } from 'react-toastify';
 import { Trash2, Globe, Lock, Copy, Check, Video } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
-import { getVideoUploadUrl, deleteVideoFile } from '../utils/api';
+import { getVideoUploadUrl } from '../utils/api';
 import { getUserId } from '../utils/cognito';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
+import { ProfilePageSkeleton } from '../components/ui/Skeleton';
 
 const Page = styled.div`
   display: flex;
@@ -153,6 +154,8 @@ export default function Profile() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadTitle, setUploadTitle] = useState('');
   const [pendingFile, setPendingFile] = useState(null);
+  const [toggling, setToggling] = useState(new Set());
+  const [deleting, setDeleting] = useState(new Set());
   const xhrRef = useRef(null);
 
   useEffect(() => { document.title = 'Profile | My Tight Five'; }, []);
@@ -229,24 +232,29 @@ export default function Profile() {
   }
 
   async function togglePublic(video) {
+    setToggling(prev => new Set(prev).add(video.id));
     try {
       await update(video.id, { ...video, is_public: !video.is_public });
     } catch {
       toast.error("Couldn't update visibility");
+    } finally {
+      setToggling(prev => { const s = new Set(prev); s.delete(video.id); return s; });
     }
   }
 
   async function handleDelete(video) {
+    setDeleting(prev => new Set(prev).add(video.id));
     try {
-      await Promise.all([
-        deleteVideoFile(video.id),
-        remove(video.id),
-      ]);
+      await remove(video.id);
       toast.success('Deleted');
     } catch {
       toast.error("Couldn't delete video");
+    } finally {
+      setDeleting(prev => { const s = new Set(prev); s.delete(video.id); return s; });
     }
   }
+
+  if (loading) return <ProfilePageSkeleton />;
 
   const sortedVideos = [...videos].sort((a, b) =>
     new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0)
@@ -303,7 +311,7 @@ export default function Profile() {
           </UploadZone>
         )}
 
-        {!loading && sortedVideos.length === 0 && !pendingFile && (
+        {sortedVideos.length === 0 && !pendingFile && (
           <EmptyState message="No videos yet. Upload your first performance." />
         )}
 
@@ -315,6 +323,7 @@ export default function Profile() {
               <Button
                 $size="sm"
                 $variant="ghost"
+                $loading={toggling.has(video.id)}
                 onClick={() => togglePublic(video)}
                 title={video.is_public ? 'Make private' : 'Make public'}
               >
@@ -325,6 +334,7 @@ export default function Profile() {
               <Button
                 $size="sm"
                 $variant="ghost"
+                $loading={deleting.has(video.id)}
                 onClick={() => handleDelete(video)}
                 title="Delete"
               >

@@ -800,6 +800,7 @@ export default function SetDetail() {
   const { items: sets, loading: setsLoading, update } = useResource('sets');
   const { items: jokes, loading: jokesLoading } = useResource('jokes');
   const [deleting, setDeleting] = useState(false);
+  const [deletingRec, setDeletingRec] = useState(false);
   const [showAddJokes, setShowAddJokes] = useState(false);
   const [practicing, setPracticing] = useState(false);
   const [practiceLoading, setPracticeLoading] = useState(false);
@@ -1010,12 +1011,15 @@ export default function SetDetail() {
   }
 
   async function deleteSetRecording() {
+    setDeletingRec(true);
     try {
       await update(id, { ...set, audio_url: null });
       setSetRecStatus('idle');
       deleteAudioFile(id).catch(() => {});
     } catch {
       toast.error("Couldn't delete recording");
+    } finally {
+      setDeletingRec(false);
     }
   }
 
@@ -1217,7 +1221,7 @@ export default function SetDetail() {
         <RecordingBar>
           <RecordingBarLabel>Recording</RecordingBarLabel>
           <InlinePlayer url={set.audio_url} showLoop />
-          <Button $variant="ghost" $size="sm" onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
+          <Button $variant="ghost" $size="sm" $loading={deletingRec} disabled={deletingRec} onClick={deleteSetRecording} style={{ marginLeft: 'auto' }}>
             <Trash2 size={13} strokeWidth={2} />Delete
           </Button>
         </RecordingBar>
@@ -1415,8 +1419,8 @@ export default function SetDetail() {
                 {recHitMax && <RecHint $warn style={{ marginTop: 0 }}>Recording stopped at max duration</RecHint>}
                 <SetRecAudio src={setRecLocalUrl} controls />
                 <SetRecActions>
-                  <Button onClick={uploadSetRecording} disabled={setRecStatus === 'uploading'}>
-                    {setRecStatus === 'uploading' ? 'Saving…' : 'Save recording'}
+                  <Button onClick={uploadSetRecording} $loading={setRecStatus === 'uploading'} disabled={setRecStatus === 'uploading'}>
+                    Save recording
                   </Button>
                   <Button $variant="ghost" onClick={discardSetRecording} disabled={setRecStatus === 'uploading'}>
                     Discard
