@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useResource } from '../hooks/useResource';
 import InlinePlayer from '../components/ui/InlinePlayer';
 import PageHeader from '../components/ui/PageHeader';
@@ -13,6 +16,7 @@ import ConfirmModal from '../components/ui/ConfirmModal';
 import { Input, Label, FormGroup } from '../components/ui/Input';
 import { SetsPageSkeleton } from '../components/ui/Skeleton';
 import { formatDuration, totalSetDuration, parseDurationInput } from '../utils/time';
+
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(6px); }
@@ -43,13 +47,38 @@ const Body = styled.div`
 const SetCard = styled(Card)`
   position: relative;
   margin-bottom: 0.5rem;
-  cursor: pointer;
-  padding: 1.25rem 2.75rem 1.5rem 1.5rem;
-  animation: ${fadeIn} 0.22s ease both;
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  animation: ${({ $dragging }) => $dragging ? 'none' : fadeIn} 0.22s ease both;
   animation-delay: ${({ $i }) => Math.min($i * 50, 250)}ms;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+  opacity: ${({ $dragging }) => $dragging ? 0.5 : 1};
+  box-shadow: ${({ $dragging, theme }) => $dragging ? theme.shadowMd : 'none'};
 
   &:hover { border-color: ${({ theme }) => theme.primary}; }
+`;
+
+const DragHandle = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0 0.625rem;
+  cursor: grab;
+  color: ${({ theme }) => theme.textMuted};
+  touch-action: none;
+  opacity: 0.35;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.8; }
+  &:active { cursor: grabbing; }
+`;
+
+const SetCardContent = styled.div`
+  flex: 1;
+  padding: 1.25rem 2.75rem 1.5rem 0.75rem;
+  cursor: pointer;
+  min-width: 0;
 `;
 
 const DeleteBtn = styled(Button)`
@@ -102,9 +131,51 @@ const ProgressFill = styled.div`
   transition: width 0.4s ease, background 0.3s ease;
 `;
 
+function SortableSetCard({ set, i, jokeMap, onDelete, onNavigate }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: set.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  const duration = totalSetDuration(set.joke_ids || [], jokeMap);
+  const targetDuration = set.target_duration_seconds;
+  const jokeCount = (set.joke_ids || []).filter(jid => jokeMap[jid]).length;
+
+  return (
+    <SetCard ref={setNodeRef} style={style} $i={i} $dragging={isDragging} {...attributes}>
+      <DragHandle ref={setActivatorNodeRef} {...listeners}>
+        <GripVertical size={16} strokeWidth={2} />
+      </DragHandle>
+      <SetCardContent onClick={onNavigate}>
+        <SetName>{set.name}</SetName>
+        <SetMeta>
+          <span>{jokeCount} joke{jokeCount !== 1 ? 's' : ''}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {set.audio_url && (
+              <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                <InlinePlayer url={set.audio_url} showLoop />
+              </span>
+            )}
+            <span>
+              <MetaDuration $raw={targetDuration ? (duration / targetDuration) * 100 : 0}>{formatDuration(duration)}</MetaDuration>
+              {targetDuration > 0 && ` / ${formatDuration(targetDuration)}`}
+            </span>
+          </div>
+        </SetMeta>
+        {targetDuration > 0 && (
+          <ProgressTrack>
+            <ProgressFill $pct={Math.min(100, (duration / targetDuration) * 100)} $raw={(duration / targetDuration) * 100} />
+          </ProgressTrack>
+        )}
+      </SetCardContent>
+      <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); onDelete(set.id); }} aria-label="Delete set">
+        <X size={14} strokeWidth={2} />
+      </DeleteBtn>
+    </SetCard>
+  );
+}
+
 export default function Sets() {
   const navigate = useNavigate();
-  const { items: sets, loading, create, remove } = useResource('sets');
+  const { items: sets, loading, create, update, remove } = useResource('sets');
   const { items: jokes } = useResource('jokes');
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -112,8 +183,44 @@ export default function Sets() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [setIds, setSetIds] = useState([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   useEffect(() => { document.title = 'Sets | My Tight Five'; }, []);
+
+  useEffect(() => {
+    if (loading || setIds.length > 0) return;
+    setSetIds(
+      [...sets]
+        .sort((a, b) => {
+          if (a.sort_order != null && b.sort_order != null) return a.sort_order - b.sort_order;
+          if (a.sort_order != null) return -1;
+          if (b.sort_order != null) return 1;
+          return 0;
+        })
+        .map(s => s.id)
+    );
+  }, [loading, sets]);
+
+  async function handleDragEnd({ active, over }) {
+    if (!over || active.id === over.id) return;
+    const prev = setIds;
+    const next = arrayMove(prev, prev.indexOf(active.id), prev.indexOf(over.id));
+    setSetIds(next);
+    try {
+      await Promise.all(next.map((id, idx) => {
+        const set = sets.find(s => s.id === id);
+        return update(id, { ...set, sort_order: idx });
+      }));
+    } catch {
+      setSetIds(prev);
+      toast.error("Couldn't reorder sets");
+    }
+  }
 
   if (loading) return <SetsPageSkeleton />;
 
@@ -128,6 +235,7 @@ export default function Sets() {
     setSaving(true);
     try {
       const created = await create({ name: name.trim(), joke_ids: [], target_duration_seconds: targetNum });
+      setSetIds(prev => [created.id, ...prev]);
       setShowForm(false);
       setName('');
       setTarget('');
@@ -143,6 +251,7 @@ export default function Sets() {
     setDeleteLoading(true);
     try {
       await remove(deleting);
+      setSetIds(prev => prev.filter(id => id !== deleting));
       toast.success('Deleted');
       setDeleting(null);
     } catch {
@@ -184,40 +293,24 @@ export default function Sets() {
             <EmptyAction type="button" onClick={() => setShowForm(true)}>Create one</EmptyAction>
           </EmptyState>
         ) : (
-          sets.map((set, i) => {
-            const duration = totalSetDuration(set.joke_ids || [], jokeMap);
-            const targetDuration = set.target_duration_seconds;
-            const over = targetDuration && duration > targetDuration;
-            const jokeCount = (set.joke_ids || []).filter(jid => jokeMap[jid]).length;
-
-            return (
-              <SetCard key={set.id} $i={i} onClick={() => navigate(`/sets/${set.id}`)}>
-                <SetName>{set.name}</SetName>
-                <SetMeta>
-                  <span>{jokeCount} joke{jokeCount !== 1 ? 's' : ''}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {set.audio_url && (
-                      <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
-                        <InlinePlayer url={set.audio_url} showLoop />
-                      </span>
-                    )}
-                    <span>
-                      <MetaDuration $raw={targetDuration ? (duration / targetDuration) * 100 : 0}>{formatDuration(duration)}</MetaDuration>
-                      {targetDuration > 0 && ` / ${formatDuration(targetDuration)}`}
-                    </span>
-                  </div>
-                </SetMeta>
-                <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(set.id); }} aria-label="Delete set">
-                  <X size={14} strokeWidth={2} />
-                </DeleteBtn>
-                {targetDuration > 0 && (
-                  <ProgressTrack>
-                    <ProgressFill $pct={Math.min(100, (duration / targetDuration) * 100)} $raw={(duration / targetDuration) * 100} />
-                  </ProgressTrack>
-                )}
-              </SetCard>
-            );
-          })
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={setIds} strategy={verticalListSortingStrategy}>
+              {setIds.map((id, i) => {
+                const set = sets.find(s => s.id === id);
+                if (!set) return null;
+                return (
+                  <SortableSetCard
+                    key={set.id}
+                    set={set}
+                    i={i}
+                    jokeMap={jokeMap}
+                    onDelete={id => setDeleting(id)}
+                    onNavigate={() => navigate(`/sets/${set.id}`)}
+                  />
+                );
+              })}
+            </SortableContext>
+          </DndContext>
         )}
       </Body>
 
