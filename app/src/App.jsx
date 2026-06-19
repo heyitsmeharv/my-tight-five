@@ -26,7 +26,7 @@ const Main = styled.main`
   min-width: 0;
 
   @media (min-width: 768px) {
-    margin-left: 12.5rem;
+    margin-left: ${({ $hasSidebar }) => $hasSidebar ? '12.5rem' : '0'};
   }
 `;
 
@@ -39,7 +39,7 @@ function Layout({ children }) {
   return (
     <>
       {!isAuthPage && !isPublicPage && <Sidebar />}
-      <Main>
+      <Main $hasSidebar={!isAuthPage && !isPublicPage}>
         {children}
       </Main>
       {!hideNav && <BottomNav />}
