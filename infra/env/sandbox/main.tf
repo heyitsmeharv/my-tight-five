@@ -49,6 +49,7 @@ module "video_bucket" {
       "https://www.${var.domain}",
       "http://localhost:5173",
     ]
+    expose_headers  = ["ETag", "Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"]
     max_age_seconds = 3600
   }]
 }

@@ -43,10 +43,15 @@ export async function handler(event) {
     const publicVideos = allVideos.filter(v => v.is_public === true);
 
     const videos = await Promise.all(publicVideos.map(async video => {
-      if (!video.video_url?.startsWith('video/')) return video;
+      if (!video.video_url) return video;
+      let key = video.video_url;
+      if (key.startsWith('https://')) {
+        key = new URL(key).pathname.slice(1);
+      }
+      if (!key.startsWith('video/')) return video;
       const videoUrl = await getSignedUrl(s3, new GetObjectCommand({
-        Bucket: VIDEO_BUCKET, Key: video.video_url,
-      }), { expiresIn: 3600 });
+        Bucket: VIDEO_BUCKET, Key: key,
+      }), { expiresIn: 43200 });
       return { ...video, video_url: videoUrl };
     }));
 

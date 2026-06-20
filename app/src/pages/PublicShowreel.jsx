@@ -58,6 +58,7 @@ export default function PublicShowreel() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retriedVideos, setRetriedVideos] = useState(new Set());
 
   useEffect(() => {
     document.title = 'Showreel | My Tight Five';
@@ -84,7 +85,19 @@ export default function PublicShowreel() {
       ) : (
         videos.map(video => (
           <VideoCard key={video.id}>
-            <VideoPlayer src={video.video_url} controls preload="metadata" />
+            <VideoPlayer
+              src={video.video_url}
+              controls
+              preload="metadata"
+              onError={() => {
+                if (!retriedVideos.has(video.id)) {
+                  setRetriedVideos(prev => new Set(prev).add(video.id));
+                  fetchPublicProfile(profileId)
+                    .then(data => setVideos(data.videos || []))
+                    .catch(() => {});
+                }
+              }}
+            />
             {video.title && <VideoFooter>{video.title}</VideoFooter>}
           </VideoCard>
         ))

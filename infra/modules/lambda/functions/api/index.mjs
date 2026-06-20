@@ -37,10 +37,15 @@ async function resolveAudioUrls(items) {
 
 async function resolveVideoUrls(items) {
   return Promise.all(items.map(async item => {
-    if (!item.video_url?.startsWith('video/')) return item;
+    if (!item.video_url) return item;
+    let key = item.video_url;
+    if (key.startsWith('https://')) {
+      key = new URL(key).pathname.slice(1);
+    }
+    if (!key.startsWith('video/')) return item;
     const videoUrl = await getSignedUrl(s3, new GetObjectCommand({
-      Bucket: VIDEO_BUCKET, Key: item.video_url,
-    }), { expiresIn: 3600 });
+      Bucket: VIDEO_BUCKET, Key: key,
+    }), { expiresIn: 43200 });
     return { ...item, video_url: videoUrl };
   }));
 }
@@ -171,7 +176,7 @@ export async function handler(event) {
       if (!id) return respond(400, { error: 'Missing id' }, origin);
       if (!/^[\w-]{1,128}$/.test(id)) return respond(400, { error: 'Invalid id' }, origin);
       const body = JSON.parse(event.body || '{}');
-      const { PK: _pk, SK: _sk, ...rest } = body;
+      const { PK: _pk, SK: _sk, video_url: _vu, ...rest } = body;
       const item = { PK, SK: `${pfx}#${id}`, ...rest };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
       const resolver = resource === 'videos' ? resolveVideoUrls : resolveAudioUrls;

@@ -156,6 +156,7 @@ export default function Showreel() {
   const [pendingFile, setPendingFile] = useState(null);
   const [toggling, setToggling] = useState(new Set());
   const [deleting, setDeleting] = useState(new Set());
+  const [retriedVideos, setRetriedVideos] = useState(new Set());
   const xhrRef = useRef(null);
 
   useEffect(() => { document.title = 'Showreel | My Tight Five'; }, []);
@@ -234,7 +235,8 @@ export default function Showreel() {
   async function togglePublic(video) {
     setToggling(prev => new Set(prev).add(video.id));
     try {
-      await update(video.id, { ...video, is_public: !video.is_public });
+      const { video_url, ...rest } = video;
+      await update(video.id, { ...rest, is_public: !video.is_public });
     } catch {
       toast.error("Couldn't update visibility");
     } finally {
@@ -317,7 +319,17 @@ export default function Showreel() {
 
         {sortedVideos.map(video => (
           <VideoCard key={video.id}>
-            <VideoPlayer src={video.video_url} controls preload="metadata" />
+            <VideoPlayer
+              src={video.video_url}
+              controls
+              preload="metadata"
+              onError={() => {
+                if (!retriedVideos.has(video.id)) {
+                  setRetriedVideos(prev => new Set(prev).add(video.id));
+                  reload();
+                }
+              }}
+            />
             <VideoFooter>
               <VideoTitle>{video.title || 'Untitled'}</VideoTitle>
               <Button
