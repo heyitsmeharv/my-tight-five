@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
@@ -304,6 +304,39 @@ const ThreadToggle = styled.button`
 `;
 
 
+const PAGE_SIZE = 20;
+
+const PaginationRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.5rem;
+`;
+
+const PaginationBtn = styled.button`
+  padding: 0.375rem 0.875rem;
+  border-radius: ${({ theme }) => theme.radius};
+  border: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bgCard};
+  color: ${({ theme }) => theme.text};
+  font-size: 0.8rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover:not(:disabled) { border-color: ${({ theme }) => theme.primary}; }
+  &:disabled { opacity: 0.35; cursor: default; }
+`;
+
+const PaginationInfo = styled.span`
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  min-width: 3.5rem;
+  text-align: center;
+`;
+
 const STAGE_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'draft', label: 'Drafts' },
@@ -318,9 +351,11 @@ export default function Jokes() {
   const { items: sets, update: updateSet } = useResource('sets');
   const [stage, setStage] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(new Set());
+  const scrollRef = useRef(null);
 
   function toggleCollapse(id, e) {
     e.stopPropagation();
@@ -342,6 +377,11 @@ export default function Jokes() {
   }
 
   useEffect(() => { document.title = 'Jokes | My Tight Five'; }, []);
+
+  useEffect(() => {
+    setPage(1);
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [stage, searchQuery]);
 
   if (loading) return <JokesPageSkeleton />;
 
@@ -369,8 +409,12 @@ export default function Jokes() {
   });
   const roots = filtered.filter(j => !j.callback_to || !filteredIds.has(j.callback_to));
 
+  const totalPages = Math.max(1, Math.ceil(roots.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRoots = roots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   const groups = {};
-  roots.forEach(joke => {
+  pageRoots.forEach(joke => {
     const cat = joke.tags?.[0] || '';
     (groups[cat] = groups[cat] || []).push(joke);
   });
@@ -380,7 +424,7 @@ export default function Jokes() {
   }
 
   const catCounts = {};
-  roots.forEach(joke => {
+  pageRoots.forEach(joke => {
     const cat = joke.tags?.[0] || '';
     catCounts[cat] = (catCounts[cat] || 0) + countTree(joke.id);
   });
@@ -390,6 +434,11 @@ export default function Jokes() {
     if (a && !b) return -1;
     return a.localeCompare(b);
   });
+
+  function goToPage(p) {
+    setPage(p);
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function renderNode(joke, depth, animI) {
     const stageKey = joke.stage || 'draft';
@@ -489,7 +538,7 @@ export default function Jokes() {
         ))}
       </Filters>
 
-      <ScrollArea>
+      <ScrollArea ref={scrollRef}>
         {filtered.length === 0 ? (
           searchQuery
             ? <EmptyState message={`No jokes matching "${searchQuery}".`} />
@@ -530,6 +579,13 @@ export default function Jokes() {
             })}
           </Stack>
         )}
+          {totalPages > 1 && (
+            <PaginationRow>
+              <PaginationBtn disabled={safePage === 1} onClick={() => goToPage(safePage - 1)}>← Prev</PaginationBtn>
+              <PaginationInfo>{safePage} / {totalPages}</PaginationInfo>
+              <PaginationBtn disabled={safePage === totalPages} onClick={() => goToPage(safePage + 1)}>Next →</PaginationBtn>
+            </PaginationRow>
+          )}
       </ScrollArea>
 
       {deleting && (
