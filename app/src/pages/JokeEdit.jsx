@@ -239,6 +239,12 @@ export default function JokeEdit() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
+  function audioKey(url) {
+    if (!url) return null;
+    if (url.startsWith('audio/')) return url;
+    try { return new URL(url).pathname.slice(1); } catch { return null; }
+  }
+
   async function handleSave() {
     if (!form.setup.trim()) return toast.error('Add a setup first');
     if (recordingStatus === 'recording' || recordingStatus === 'requesting') {
@@ -250,9 +256,10 @@ export default function JokeEdit() {
     }
     setSaving(true);
     try {
-      const { category, ...rest } = form;
+      const { category, audio_url, ...rest } = form;
       const data = {
         ...rest,
+        audio_url: audioKey(audio_url),
         tags: category.trim() ? [category.trim().toLowerCase().replace(/^#/, '')] : [],
         duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
         callback_to: form.callback_to || null,
@@ -286,7 +293,7 @@ export default function JokeEdit() {
     setUnsavedRecordingConfirm(false);
     const jokeId = isNew ? pendingIdRef.current : id;
     try {
-      const { category, ...rest } = form;
+      const { category, audio_url: _au, ...rest } = form;
       const data = {
         ...rest,
         audio_url: newAudioUrl,

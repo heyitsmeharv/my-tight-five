@@ -181,8 +181,7 @@ export async function handler(event) {
       if (!id) return respond(400, { error: 'Missing id' }, origin);
       if (!/^[\w-]{1,128}$/.test(id)) return respond(400, { error: 'Invalid id' }, origin);
       const body = JSON.parse(event.body || '{}');
-      const { PK: _pk, SK: _sk, video_url: _vu, ...rest } = body;
-      if (rest.audio_url?.startsWith('https://')) delete rest.audio_url;
+      const { PK: _pk, SK: _sk, ...rest } = body;
       const item = { PK, SK: `${pfx}#${id}`, ...rest };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
       const resolver = resource === 'videos' ? resolveVideoUrls : resolveAudioUrls;

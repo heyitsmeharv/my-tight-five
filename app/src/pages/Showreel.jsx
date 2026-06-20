@@ -232,11 +232,16 @@ export default function Showreel() {
     }
   }
 
+  function videoKey(url) {
+    if (!url) return null;
+    if (url.startsWith('video/')) return url;
+    try { return new URL(url).pathname.slice(1); } catch { return null; }
+  }
+
   async function togglePublic(video) {
     setToggling(prev => new Set(prev).add(video.id));
     try {
-      const { video_url, ...rest } = video;
-      await update(video.id, { ...rest, is_public: !video.is_public });
+      await update(video.id, { ...video, video_url: videoKey(video.video_url), is_public: !video.is_public });
     } catch {
       toast.error("Couldn't update visibility");
     } finally {
