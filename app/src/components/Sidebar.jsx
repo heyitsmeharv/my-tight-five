@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { Home, Lightbulb, Mic2, List, Video, Sun, Moon, LogOut } from 'lucide-react';
+import { Home, Lightbulb, Mic2, List, Video, CalendarDays, Sun, Moon, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -108,6 +108,7 @@ const NAV_ITEMS = [
   { to: '/ideas', label: 'Ideas', icon: Lightbulb },
   { to: '/jokes', label: 'Jokes', icon: Mic2 },
   { to: '/sets', label: 'Sets', icon: List },
+  { to: '/gigs', label: 'Gigs', icon: CalendarDays },
   { to: '/showreel', label: 'Showreel', icon: Video },
 ];
 

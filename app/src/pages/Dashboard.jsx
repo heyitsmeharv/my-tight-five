@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { Plus, CornerDownLeft } from 'lucide-react';
+import { Plus, CornerDownLeft, Users, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { ulid } from 'ulid';
 import { post } from '../utils/api';
@@ -323,6 +323,66 @@ const EmptyNote = styled.p`
   padding: 0.25rem 0;
 `;
 
+const GigList = styled.div`
+  padding: 0 1rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 400px) {
+    padding: 0 0.75rem;
+  }
+`;
+
+const GigRow = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { opacity: 0.75; }
+`;
+
+const GigRowDate = styled.span`
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.63rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.primary};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const GigRowVenue = styled.span`
+  font-size: 0.85rem;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const GigRowMeta = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.63rem;
+  color: ${({ theme }) => theme.textMuted};
+  flex-shrink: 0;
+`;
+
+function formatGigDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short',
+  });
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -332,11 +392,19 @@ export default function Dashboard() {
 
   const { items: jokes, loading: jokesLoading } = useResource('jokes');
   const { items: sets, loading: setsLoading } = useResource('sets');
+  const { items: gigs, loading: gigsLoading } = useResource('gigs');
   useEffect(() => { document.title = 'My Tight Five'; }, []);
 
-  if (jokesLoading || setsLoading) return <DashboardSkeleton />;
+  if (jokesLoading || setsLoading || gigsLoading) return <DashboardSkeleton />;
 
   const recentJokes = jokes.slice(0, 8);
+
+  const setMap = {};
+  sets.forEach(s => { setMap[s.id] = s; });
+
+  const recentGigs = [...gigs]
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 3);
   const polishedJokes = jokes.filter(j => j.stage === 'polished');
   const polishedMinutes = Math.round(
     polishedJokes.reduce((acc, j) => acc + (j.duration_seconds || 0), 0) / 60
@@ -390,6 +458,29 @@ export default function Dashboard() {
         />
         <Button type="submit" disabled={saving || !idea.trim()}><Plus size={16} strokeWidth={2} /></Button>
       </QuickCapture>
+
+      {recentGigs.length > 0 && (
+        <>
+          <SectionHeader>
+            <SectionTitle>Recent Gigs</SectionTitle>
+            <Button $variant="link" $size="sm" onClick={() => navigate('/gigs')}>All</Button>
+          </SectionHeader>
+          <GigList>
+            {recentGigs.map(gig => (
+              <GigRow key={gig.id} onClick={() => navigate('/gigs')}>
+                <GigRowDate>{formatGigDate(gig.date)}</GigRowDate>
+                <GigRowVenue>{gig.venue}</GigRowVenue>
+                {setMap[gig.setId] && (
+                  <GigRowMeta><FileText size={10} strokeWidth={2} />{setMap[gig.setId].title}</GigRowMeta>
+                )}
+                {gig.audienceSize != null && (
+                  <GigRowMeta><Users size={10} strokeWidth={2} />{gig.audienceSize}</GigRowMeta>
+                )}
+              </GigRow>
+            ))}
+          </GigList>
+        </>
+      )}
 
       {recentJokes.length !== 0 && (
         <>

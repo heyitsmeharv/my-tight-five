@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { Home, Lightbulb, Mic2, List, Video } from 'lucide-react';
+import { Home, Lightbulb, Mic2, List, Video, CalendarDays } from 'lucide-react';
 
 const Nav = styled.nav`
   position: fixed;
@@ -57,7 +57,8 @@ const NAV_ITEMS = [
   { to: '/ideas', label: 'Ideas', icon: Lightbulb },
   { to: '/jokes', label: 'Jokes', icon: Mic2 },
   { to: '/sets', label: 'Sets', icon: List },
-  { to: '/showreel', label: 'Showreel', icon: Video },
+  { to: '/gigs', label: 'Gigs', icon: CalendarDays },
+  { to: '/showreel', label: 'Reel', icon: Video },
 ];
 
 export default function BottomNav() {

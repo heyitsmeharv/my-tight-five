@@ -503,6 +503,35 @@ export function ShowreelPageSkeleton() {
   );
 }
 
+const SGigCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: ${({ theme }) => theme.radius};
+  background: ${({ theme }) => theme.bgCard};
+  padding: 0.875rem 3rem 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+`;
+
+export function GigsPageSkeleton() {
+  return (
+    <SPage>
+      <SHeader>
+        <SkeletonLine $h={14} $w={24} style={{ flexShrink: 0 }} />
+        <SkeletonLine $h={16} style={{ maxWidth: '20%' }} />
+        <SkeletonLine $h={30} $w={88} style={{ marginLeft: 'auto', borderRadius: '0.375rem', flexShrink: 0 }} />
+      </SHeader>
+      <div style={{ padding: '1rem' }}>
+        {[0, 1, 2].map(i => (
+          <SGigCard key={i}>
+            <SkeletonLine $h={10} $w={110} style={{ marginBottom: '0.375rem' }} />
+            <SkeletonLine $h={15} style={{ marginBottom: '0.375rem', maxWidth: '55%' }} />
+            <SkeletonLine $h={10} $w={80} />
+          </SGigCard>
+        ))}
+      </div>
+    </SPage>
+  );
+}
+
 export function DashboardSkeleton() {
   return (
     <SPage>

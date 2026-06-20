@@ -19,6 +19,7 @@ import Sets from './pages/Sets';
 import SetDetail from './pages/SetDetail';
 import SetReadThrough from './pages/SetReadThrough';
 import Showreel from './pages/Showreel';
+import Gigs from './pages/Gigs';
 import PublicShowreel from './pages/PublicShowreel';
 
 const Main = styled.main`
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/sets/:id" element={<ProtectedRoute><SetDetail /></ProtectedRoute>} />
           <Route path="/sets/:id/read" element={<ProtectedRoute><SetReadThrough /></ProtectedRoute>} />
           <Route path="/showreel" element={<ProtectedRoute><Showreel /></ProtectedRoute>} />
+          <Route path="/gigs" element={<ProtectedRoute><Gigs /></ProtectedRoute>} />
           <Route path="/u/:profileId" element={<PublicShowreel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
