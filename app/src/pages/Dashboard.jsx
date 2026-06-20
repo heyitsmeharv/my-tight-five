@@ -471,7 +471,7 @@ export default function Dashboard() {
                 <GigRowDate>{formatGigDate(gig.date)}</GigRowDate>
                 <GigRowVenue>{gig.venue}</GigRowVenue>
                 {setMap[gig.setId] && (
-                  <GigRowMeta><FileText size={10} strokeWidth={2} />{setMap[gig.setId].title}</GigRowMeta>
+                  <GigRowMeta><FileText size={10} strokeWidth={2} />{setMap[gig.setId].name}</GigRowMeta>
                 )}
                 {gig.audienceSize != null && (
                   <GigRowMeta><Users size={10} strokeWidth={2} />{gig.audienceSize}</GigRowMeta>

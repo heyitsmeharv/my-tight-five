@@ -253,7 +253,7 @@ export default function Gigs() {
               <Select value={form.setId} onChange={e => field('setId', e.target.value)}>
                 <option value="">No set</option>
                 {sets.map(s => (
-                  <option key={s.id} value={s.id}>{s.title || 'Untitled'}</option>
+                  <option key={s.id} value={s.id}>{s.name || 'Untitled'}</option>
                 ))}
               </Select>
             </FormGroup>
@@ -289,7 +289,7 @@ export default function Gigs() {
                   {linkedSet && (
                     <GigMetaItem>
                       <FileText size={11} strokeWidth={2} />
-                      {linkedSet.title || 'Untitled'}
+                      {linkedSet.name || 'Untitled'}
                     </GigMetaItem>
                   )}
                   {gig.audienceSize != null && (
