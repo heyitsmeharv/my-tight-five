@@ -27,9 +27,14 @@ const ALLOWED_ORIGINS = new Set([
 
 async function resolveAudioUrls(items) {
   return Promise.all(items.map(async item => {
-    if (!item.audio_url?.startsWith('audio/')) return item;
+    if (!item.audio_url) return item;
+    let key = item.audio_url;
+    if (key.startsWith('https://')) {
+      key = new URL(key).pathname.slice(1);
+    }
+    if (!key.startsWith('audio/')) return item;
     const audioUrl = await getSignedUrl(s3, new GetObjectCommand({
-      Bucket: AUDIO_BUCKET, Key: item.audio_url,
+      Bucket: AUDIO_BUCKET, Key: key,
     }), { expiresIn: 86400 });
     return { ...item, audio_url: audioUrl };
   }));
@@ -177,6 +182,7 @@ export async function handler(event) {
       if (!/^[\w-]{1,128}$/.test(id)) return respond(400, { error: 'Invalid id' }, origin);
       const body = JSON.parse(event.body || '{}');
       const { PK: _pk, SK: _sk, video_url: _vu, ...rest } = body;
+      if (rest.audio_url?.startsWith('https://')) delete rest.audio_url;
       const item = { PK, SK: `${pfx}#${id}`, ...rest };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
       const resolver = resource === 'videos' ? resolveVideoUrls : resolveAudioUrls;
