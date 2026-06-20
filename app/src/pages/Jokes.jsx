@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { X, Plus, CornerDownLeft, ChevronDown } from 'lucide-react';
+import { X, Plus, CornerDownLeft, ChevronDown, Search } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -38,6 +38,52 @@ const ScrollArea = styled.div`
   @media (min-width: 768px) {
     padding-bottom: 1rem;
   }
+`;
+
+const SearchRow = styled.div`
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+`;
+
+const SearchWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchIconWrap = styled.span`
+  position: absolute;
+  left: 0.625rem;
+  color: ${({ theme }) => theme.textMuted};
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  background: ${({ theme }) => theme.bgCard};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: ${({ theme }) => theme.radius};
+  padding: 0.4375rem 2rem 0.4375rem 2.125rem;
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.text};
+  outline: none;
+  transition: border-color 0.15s;
+
+  &::placeholder { color: ${({ theme }) => theme.textMuted}; }
+  &:focus { border-color: ${({ theme }) => theme.primary}; }
+`;
+
+const ClearBtn = styled.button`
+  position: absolute;
+  right: 0.5rem;
+  color: ${({ theme }) => theme.textMuted};
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.text}; }
 `;
 
 const Filters = styled.div`
@@ -271,6 +317,7 @@ export default function Jokes() {
   const { items: jokes, loading, remove } = useResource('jokes');
   const { items: sets, update: updateSet } = useResource('sets');
   const [stage, setStage] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(new Set());
@@ -298,7 +345,20 @@ export default function Jokes() {
 
   if (loading) return <JokesPageSkeleton />;
 
-  const filtered = stage === 'all' ? jokes : jokes.filter(j => (j.stage || 'draft') === stage);
+  function matchesSearch(joke, query) {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (
+      (joke.setup || '').toLowerCase().includes(q) ||
+      (joke.punchline || '').toLowerCase().includes(q) ||
+      (joke.followup || '').toLowerCase().includes(q) ||
+      (joke.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  const filtered = jokes
+    .filter(j => stage === 'all' || (j.stage || 'draft') === stage)
+    .filter(j => matchesSearch(j, searchQuery));
 
   const filteredIds = new Set(filtered.map(j => j.id));
   const cbMap = {};
@@ -404,6 +464,23 @@ export default function Jokes() {
         actions={<Button $size="sm" onClick={() => navigate('/jokes/new')}><Plus size={14} strokeWidth={2} />New</Button>}
       />
 
+      <SearchRow>
+        <SearchWrap>
+          <SearchIconWrap><Search size={14} strokeWidth={2} /></SearchIconWrap>
+          <SearchInput
+            type="search"
+            placeholder="Search jokes…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <ClearBtn onClick={() => setSearchQuery('')} aria-label="Clear search">
+              <X size={14} strokeWidth={2} />
+            </ClearBtn>
+          )}
+        </SearchWrap>
+      </SearchRow>
+
       <Filters>
         {STAGE_FILTERS.map(({ value, label }) => (
           <FilterBtn key={value} $active={stage === value} onClick={() => setStage(value)}>
@@ -414,7 +491,9 @@ export default function Jokes() {
 
       <ScrollArea>
         {filtered.length === 0 ? (
-          stage === 'all'
+          searchQuery
+            ? <EmptyState message={`No jokes matching "${searchQuery}".`} />
+            : stage === 'all'
             ? <EmptyState>
               <EmptyAction type="button" onClick={() => navigate('/jokes/new')}>Write a joke</EmptyAction>
             </EmptyState>
@@ -424,7 +503,7 @@ export default function Jokes() {
             {groupKeys.map(cat => {
               const groupJokes = groups[cat];
               const label = cat || 'Uncategorized';
-              const isGroupCollapsed = collapsedGroups.has(cat);
+              const isGroupCollapsed = !searchQuery && collapsedGroups.has(cat);
               return (
                 <div key={cat || '__none__'}>
                   <SectionLabel onClick={() => toggleGroup(cat)}>
