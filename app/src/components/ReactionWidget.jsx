@@ -1,7 +1,9 @@
 import styled from 'styled-components';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { ThumbsUp, Minus, Bomb, TrendingUp, TrendingDown } from 'lucide-react';
 
 export const REACTION_COLORS = { '1': '#10b981', '0': '#9ca3af', '-1': '#ef4444' };
+
+const REACTION_ICONS = { '1': ThumbsUp, '0': Minus, '-1': Bomb };
 
 function calcTrend(reactions) {
   if (reactions.length < 4) return 'neutral';
@@ -15,18 +17,14 @@ function calcTrend(reactions) {
 }
 
 const Wrap = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   margin-top: 0.375rem;
-`;
-
-const Dot = styled.span`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  flex-shrink: 0;
+  margin-bottom: 0.375rem;
+  background: ${({ theme }) => theme.borderSubtle};
+  border-radius: 99px;
+  padding: 0.25rem 0.5rem;
 `;
 
 const TrendIcon = styled.span`
@@ -45,7 +43,10 @@ export default function ReactionWidget({ reactions = [] }) {
 
   return (
     <Wrap>
-      {last5.map((r, i) => <Dot key={i} $color={REACTION_COLORS[String(r.rating)]} />)}
+      {last5.map((r, i) => {
+        const Icon = REACTION_ICONS[String(r.rating)];
+        return <Icon key={i} size={11} strokeWidth={2} color={REACTION_COLORS[String(r.rating)]} />;
+      })}
       {reactions.length >= 4 && trend !== 'neutral' && (
         <TrendIcon $trend={trend}>
           {trend === 'up' ? <TrendingUp size={10} strokeWidth={2} /> : <TrendingDown size={10} strokeWidth={2} />}

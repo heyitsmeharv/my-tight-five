@@ -137,20 +137,6 @@ const GigNotes = styled.p`
   overflow: hidden;
 `;
 
-const RatingsRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 0.5rem;
-`;
-
-const RatingDot = styled.span`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  flex-shrink: 0;
-`;
 
 const DeleteBtn = styled(Button)`
   position: absolute;
@@ -205,7 +191,7 @@ const RateBtn = styled.button`
   justify-content: center;
   gap: 0.375rem;
   padding: 0.4rem 0;
-  border: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.border};
+  border: 1px solid ${({ theme }) => theme.border};
   border-left: none;
   background: ${({ $active, $bg }) => $active ? $bg : 'transparent'};
   color: ${({ $active, $color, theme }) => $active ? $color : theme.textMuted};
@@ -215,10 +201,10 @@ const RateBtn = styled.button`
   letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s;
 
   &:first-child {
-    border-left: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.border};
+    border-left: 1px solid ${({ theme }) => theme.border};
     border-radius: ${({ theme }) => theme.radiusSm} 0 0 ${({ theme }) => theme.radiusSm};
   }
 
@@ -228,9 +214,7 @@ const RateBtn = styled.button`
 
   &:hover:not(:disabled) {
     color: ${({ $color }) => $color};
-    border-color: ${({ $color }) => $color};
-    position: relative;
-    z-index: 1;
+    background: ${({ $bg }) => $bg};
   }
 `;
 
@@ -275,16 +259,6 @@ export default function Gigs() {
 
   const jokeMap = {};
   jokes.forEach(j => { jokeMap[j.id] = j; });
-
-  // Most recent rating per joke per gig (reactions sorted desc by created_at)
-  const gigReactionsMap = {};
-  reactions.forEach(r => {
-    if (!r.gigId) return;
-    if (!gigReactionsMap[r.gigId]) gigReactionsMap[r.gigId] = {};
-    if (!(r.jokeId in gigReactionsMap[r.gigId])) {
-      gigReactionsMap[r.gigId][r.jokeId] = r.rating;
-    }
-  });
 
   function field(key, value) {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -508,8 +482,6 @@ export default function Gigs() {
         ) : (
           sortedGigs.map((gig, i) => {
             const linkedSet = gig.setId ? setMap[gig.setId] : null;
-            const gigRatings = gigReactionsMap[gig.id] || {};
-            const ratedDots = (linkedSet?.joke_ids || []).filter(jid => jid in gigRatings);
 
             if (editingGigId === gig.id) {
               return (
@@ -580,13 +552,6 @@ export default function Gigs() {
                   )}
                 </GigMeta>
                 {gig.notes && <GigNotes>{gig.notes}</GigNotes>}
-                {ratedDots.length > 0 && (
-                  <RatingsRow>
-                    {ratedDots.map(jid => (
-                      <RatingDot key={jid} $color={REACTION_COLORS[String(gigRatings[jid])]} />
-                    ))}
-                  </RatingsRow>
-                )}
                 <DeleteBtn
                   $variant="ghost"
                   $size="sm"

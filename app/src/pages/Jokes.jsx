@@ -470,6 +470,7 @@ export default function Jokes() {
               {callbackJoke.setup || 'Untitled'}
             </CallbackLink>
           )}
+          <ReactionWidget reactions={reactionsByJokeId[joke.id] || []} />
           <CardFooter>
             <StageBadge stage={stageKey} />
             {joke.duration_seconds > 0 && <CardDuration>{formatDuration(joke.duration_seconds)}</CardDuration>}
@@ -482,7 +483,6 @@ export default function Jokes() {
               </ThreadToggle>
             )}
           </CardFooter>
-          <ReactionWidget reactions={reactionsByJokeId[joke.id] || []} />
           <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
             <X size={14} strokeWidth={2} />
           </DeleteBtn>
