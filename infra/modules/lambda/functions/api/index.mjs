@@ -74,6 +74,7 @@ function prefix(resource) {
     sets: 'SET',
     videos: 'VIDEO',
     gigs: 'GIG',
+    reactions: 'REACTION',
   };
   return map[resource];
 }

@@ -13,6 +13,7 @@ import { JokesPageSkeleton } from '../components/ui/Skeleton';
 import InlinePlayer from '../components/ui/InlinePlayer';
 import { formatDuration } from '../utils/time';
 import { STAGE_COLOR } from '../utils/stages';
+import ReactionWidget from '../components/ReactionWidget';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(8px); }
@@ -349,6 +350,7 @@ export default function Jokes() {
   const navigate = useNavigate();
   const { items: jokes, loading, remove } = useResource('jokes');
   const { items: sets, update: updateSet } = useResource('sets');
+  const { items: reactions } = useResource('reactions');
   const [stage, setStage] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -384,6 +386,11 @@ export default function Jokes() {
   }, [stage, searchQuery]);
 
   if (loading) return <JokesPageSkeleton />;
+
+  const reactionsByJokeId = {};
+  reactions.forEach(r => {
+    (reactionsByJokeId[r.jokeId] = reactionsByJokeId[r.jokeId] || []).push(r);
+  });
 
   function matchesSearch(joke, query) {
     if (!query) return true;
@@ -475,6 +482,7 @@ export default function Jokes() {
               </ThreadToggle>
             )}
           </CardFooter>
+          <ReactionWidget reactions={reactionsByJokeId[joke.id] || []} />
           <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
             <X size={14} strokeWidth={2} />
           </DeleteBtn>
