@@ -147,9 +147,8 @@ const JokeCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-left: 4px solid ${({ $color }) => $color ?? 'transparent'};
   border-radius: ${({ theme }) => theme.radius};
-  padding: 0.875rem 2.875rem 0.875rem 1rem;
+  padding: 0.875rem 1rem;
   cursor: pointer;
-  position: relative;
   content-visibility: auto;
   contain-intrinsic-size: 0 120px;
   animation: ${fadeUp} 0.2s ease both;
@@ -235,7 +234,19 @@ const CallbackLink = styled.button`
   }
 `;
 
-const Spacer = styled.div`flex: 1;`;
+const CardActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+`;
+
+const CardActionsRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+`;
 
 const SectionLabel = styled.button`
   display: flex;
@@ -271,18 +282,6 @@ const GroupCards = styled.div`
   flex-direction: column;
   gap: 1rem;
   padding-bottom: 0.25rem;
-`;
-
-const DeleteBtn = styled(Button)`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-
-  @media (pointer: fine) {
-    opacity: 0;
-    transition: opacity 0.15s;
-    ${JokeCard}:hover & { opacity: 1; }
-  }
 `;
 
 const ThreadToggle = styled.button`
@@ -477,18 +476,23 @@ export default function Jokes() {
           <CardFooter>
             <StageBadge stage={stageKey} />
             {joke.duration_seconds > 0 && <CardDuration>{formatDuration(joke.duration_seconds)}</CardDuration>}
-            {(joke.audio_url || hasChildren) && <Spacer />}
-            {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
-            {hasChildren && (
-              <ThreadToggle $collapsed={isCollapsed} onClick={e => toggleCollapse(joke.id, e)}>
-                {isCollapsed && children.length}
-                <ChevronDown size={12} strokeWidth={2} />
-              </ThreadToggle>
-            )}
           </CardFooter>
-          <DeleteBtn $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
-            <X size={14} strokeWidth={2} />
-          </DeleteBtn>
+          <CardActions>
+            <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+              {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+            </span>
+            <CardActionsRight>
+              {hasChildren && (
+                <ThreadToggle $collapsed={isCollapsed} onClick={e => toggleCollapse(joke.id, e)}>
+                  {isCollapsed && children.length}
+                  <ChevronDown size={12} strokeWidth={2} />
+                </ThreadToggle>
+              )}
+              <Button $variant="ghost" $size="sm" onClick={e => { e.stopPropagation(); setDeleting(joke.id); }} aria-label="Delete joke">
+                <X size={14} strokeWidth={2} />
+              </Button>
+            </CardActionsRight>
+          </CardActions>
         </JokeCard>
         {hasChildren && !isCollapsed && (
           <ThreadChildren>
