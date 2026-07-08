@@ -53,9 +53,10 @@ const TimingBar = styled.div`
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   background: ${({ theme }) => theme.bgCard};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+  border-radius: 0.375rem;
   font-size: 0.85rem;
   min-width: 0;
+  margin-top: 1rem;
 `;
 
 const BarTrack = styled.div`
@@ -1051,7 +1052,7 @@ export default function SetDetail() {
     try {
       await update(id, { ...set, audio_url: null });
       setSetRecStatus('idle');
-      deleteAudioFile(id).catch(() => {});
+      deleteAudioFile(id).catch(() => { });
     } catch {
       toast.error("Couldn't delete recording");
     } finally {
