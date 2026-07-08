@@ -197,7 +197,7 @@ export default function JokeEdit() {
 
   function handleBack() {
     if (isDirty) setLeaveConfirm(true);
-    else navigate('/jokes');
+    else navigate(-1);
   }
 
   useEffect(() => {
@@ -271,7 +271,7 @@ export default function JokeEdit() {
       }
       setIsDirty(false);
       toast.success('Saved');
-      navigate('/jokes');
+      navigate(-1);
     } catch {
       toast.error("Couldn't save");
     } finally {
@@ -308,13 +308,13 @@ export default function JokeEdit() {
       }
       setIsDirty(false);
       toast.success('Saved');
-      navigate('/jokes');
+      navigate(-1);
     } catch (err) {
       if (err.message?.endsWith('409')) {
         // DB write succeeded on a prior attempt whose response was lost.
         // The audio file and joke are both intact — treat as success.
         toast.success('Saved');
-        navigate('/jokes');
+        navigate(-1);
         return;
       }
       try { await deleteAudioFile(jokeId); } catch {}
@@ -336,7 +336,7 @@ export default function JokeEdit() {
       await remove(id);
       setIsDirty(false);
       toast.success('Deleted');
-      navigate('/jokes');
+      navigate(-1);
     } catch {
       toast.error("Couldn't delete");
       setDeleteLoading(false);
@@ -487,7 +487,7 @@ export default function JokeEdit() {
           message="You have unsaved changes that will be lost."
           confirmLabel="Leave"
           dangerous={false}
-          onConfirm={() => { setIsDirty(false); navigate('/jokes'); }}
+          onConfirm={() => { setIsDirty(false); navigate(-1); }}
           onCancel={() => setLeaveConfirm(false)}
         />
       )}

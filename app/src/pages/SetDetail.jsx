@@ -309,6 +309,20 @@ const JokeMeta = styled.div`
   flex-wrap: wrap;
 `;
 
+const JokeActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+`;
+
+const JokeActionsRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+`;
+
 const JokeCategory = styled.span`
   font-family: ${({ theme }) => theme.fontMono};
   font-size: 0.6rem;
@@ -320,8 +334,6 @@ const JokeCategory = styled.span`
   text-transform: uppercase;
   letter-spacing: 0.06em;
 `;
-
-const FooterSpacer = styled.div`flex: 1;`;
 
 const ModeBar = styled.div`
   display: flex;
@@ -826,11 +838,18 @@ function SortableJoke({ id, joke, onRemove, callbackWarning, jokeMap }) {
             <JokeDuration>{formatDuration(joke.duration_seconds)}</JokeDuration>
           )}
           {category && <JokeCategory>{category}</JokeCategory>}
-          {joke.audio_url && <FooterSpacer />}
-          {joke.audio_url && <span onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}><InlinePlayer url={joke.audio_url} /></span>}
         </JokeMeta>
+
+        <JokeActions onPointerDown={e => e.stopPropagation()}>
+          <span onClick={e => e.stopPropagation()}>
+            {joke.audio_url && <InlinePlayer url={joke.audio_url} />}
+          </span>
+          <JokeActionsRight>
+            <Button $variant="ghost" $size="sm" onClick={() => navigate(`/jokes/${id}`)} aria-label="Edit joke"><Pencil size={14} strokeWidth={2} /></Button>
+            <Button $variant="ghost" $size="sm" onClick={() => onRemove(id)} aria-label="Remove joke from set"><X size={14} strokeWidth={2} /></Button>
+          </JokeActionsRight>
+        </JokeActions>
       </JokeInfo>
-      <Button $variant="ghost" $size="sm" onPointerDown={e => e.stopPropagation()} onClick={() => onRemove(id)} aria-label="Remove joke from set"><X size={14} strokeWidth={2} /></Button>
     </SortableItem>
   );
 }

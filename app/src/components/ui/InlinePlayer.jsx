@@ -30,8 +30,19 @@ const Btn = styled.button`
 
 const StopBtn = styled(Btn)`
   color: ${({ theme }) => theme.textMuted};
-  border-color: ${({ theme }) => theme.border};
+  border-color: ${({ $open, theme }) => $open ? theme.border : 'transparent'};
   background: transparent;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: ${({ $open }) => $open ? 'auto' : 'none'};
+  max-width: ${({ $open }) => $open ? '6rem' : '0'};
+  padding: ${({ $open }) => $open ? '0.25rem 0.5rem' : '0.25rem 0'};
+  opacity: ${({ $open }) => $open ? 1 : 0};
+  transition: max-width 0.2s ease, padding 0.2s ease, opacity 0.15s ease, border-color 0.15s ease;
+
+  @media (min-width: 480px) {
+    padding: ${({ $open }) => $open ? '0.4rem 0.75rem' : '0.4rem 0'};
+  }
 `;
 
 const ErrBtn = styled(Btn)`
@@ -134,22 +145,7 @@ export default function InlinePlayer({ url, showLoop }) {
     );
   }
 
-  if (state === 'idle') {
-    return (
-      <Group>
-        <Btn onClick={play} $active={false} title="Play recording">
-          <Play size={13} strokeWidth={2.5} />
-          PLAY
-        </Btn>
-        {showLoop && (
-          <LoopBtn onClick={toggleLoop} $active={looping} title={looping ? 'Loop on' : 'Loop off'}>
-            <Repeat size={11} strokeWidth={2.5} />
-            LOOP
-          </LoopBtn>
-        )}
-      </Group>
-    );
-  }
+  const isIdle = state === 'idle';
 
   return (
     <Group>
@@ -159,12 +155,12 @@ export default function InlinePlayer({ url, showLoop }) {
           PAUSE
         </Btn>
       ) : (
-        <Btn onClick={play} $active={false} title="Resume">
+        <Btn onClick={play} $active={false} title={isIdle ? 'Play recording' : 'Resume'}>
           <Play size={13} strokeWidth={2.5} />
-          RESUME
+          {isIdle ? 'PLAY' : 'RESUME'}
         </Btn>
       )}
-      <StopBtn onClick={stop} $active={false} title="Stop">
+      <StopBtn $open={!isIdle} tabIndex={isIdle ? -1 : 0} onClick={stop} $active={false} title="Stop">
         <Square size={11} fill="currentColor" strokeWidth={0} />
         STOP
       </StopBtn>
