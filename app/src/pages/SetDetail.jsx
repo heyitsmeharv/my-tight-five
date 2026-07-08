@@ -56,7 +56,6 @@ const TimingBar = styled.div`
   border-radius: 0.375rem;
   font-size: 0.85rem;
   min-width: 0;
-  margin-top: 1rem;
 `;
 
 const BarTrack = styled.div`
@@ -355,8 +354,9 @@ const RecordingBar = styled.div`
   gap: 0.625rem;
   padding: 0.5rem 1rem;
   background: ${({ theme }) => theme.bgCard};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+  border-radius: 0.375rem;
   font-size: 0.82rem;
+  margin: 1rem 0;
 `;
 
 const RecordingBarLabel = styled.span`
@@ -378,10 +378,16 @@ const ListenBar = styled.div`
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.5rem 1rem;
+  padding: ${({ $open }) => $open ? '0.5rem 1rem' : '0 1rem'};
   background: ${({ theme }) => theme.bgCard};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+  border-radius: 0.375rem;
   font-size: 0.82rem;
+  margin: ${({ $open }) => $open ? '1rem 0' : '0'};
+  max-height: ${({ $open }) => $open ? '3.5rem' : '0'};
+  opacity: ${({ $open }) => $open ? 1 : 0};
+  overflow: hidden;
+  pointer-events: ${({ $open }) => $open ? 'auto' : 'none'};
+  transition: max-height 0.22s ease, opacity 0.16s ease, margin 0.22s ease, padding 0.22s ease;
 `;
 
 const ListenSetup = styled.span`
@@ -1293,6 +1299,17 @@ export default function SetDetail() {
         </RecordingBar>
       )}
 
+      {jokesWithAudio.length > 0 && (
+        <ListenBar $open={listening}>
+          <Headphones size={13} strokeWidth={2} style={{ flexShrink: 0, opacity: 0.6 }} />
+          <ListenSetup>{jokesWithAudio[listenIdx]?.setup?.slice(0, 70) || '-'}</ListenSetup>
+          <ListenCount>{listenIdx + 1} / {jokesWithAudio.length}</ListenCount>
+          <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx - 1)} disabled={listenIdx === 0} title="Previous"><SkipBack size={13} strokeWidth={2} /></Button>
+          <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx + 1)} title="Skip"><SkipForward size={13} strokeWidth={2} /></Button>
+          <ListenLoopBtn $variant="ghost" $size="sm" $on={listenLoop} onClick={() => setListenLoop(v => !v)} title={listenLoop ? 'Loop on' : 'Loop off'}><Repeat size={13} strokeWidth={2} /></ListenLoopBtn>
+        </ListenBar>
+      )}
+
       <TimingBar>
         <span>{setJokes.length} joke{setJokes.length !== 1 ? 's' : ''}</span>
         {target
@@ -1330,17 +1347,6 @@ export default function SetDetail() {
           )}
         </span>
       </TimingBar>
-
-      {listening && (
-        <ListenBar>
-          <Headphones size={13} strokeWidth={2} style={{ flexShrink: 0, opacity: 0.6 }} />
-          <ListenSetup>{jokesWithAudio[listenIdx]?.setup?.slice(0, 70) || '-'}</ListenSetup>
-          <ListenCount>{listenIdx + 1} / {jokesWithAudio.length}</ListenCount>
-          <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx - 1)} disabled={listenIdx === 0} title="Previous"><SkipBack size={13} strokeWidth={2} /></Button>
-          <Button $variant="ghost" $size="sm" onClick={() => playAtIdx(listenIdx + 1)} title="Skip"><SkipForward size={13} strokeWidth={2} /></Button>
-          <ListenLoopBtn $variant="ghost" $size="sm" $on={listenLoop} onClick={() => setListenLoop(v => !v)} title={listenLoop ? 'Loop on' : 'Loop off'}><Repeat size={13} strokeWidth={2} /></ListenLoopBtn>
-        </ListenBar>
-      )}
 
       <Body>
         {hasCallbackWarnings && (
