@@ -151,6 +151,38 @@ const TargetInput = styled.input`
   outline: none;
 `;
 
+const TitleEditBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+
+  span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  svg { flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+  &:hover svg { opacity: 0.5; }
+`;
+
+const NameInput = styled.input`
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.text};
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  width: 100%;
+  padding: 0;
+  outline: none;
+`;
+
 const EmptyMsg = styled.div`
   text-align: center;
   padding: 1.5rem 0;
@@ -336,7 +368,9 @@ const RecordingBarLabel = styled.span`
 `;
 
 const ListenLoopBtn = styled(Button)`
-  color: ${({ $on, theme }) => $on ? theme.primary : 'inherit'};
+  color: ${({ $on, theme }) => $on ? theme.primary : theme.textMuted};
+  background: ${({ $on, theme }) => $on ? theme.primaryLight : 'transparent'};
+  border-color: ${({ $on, theme }) => $on ? theme.primary : theme.border};
 `;
 
 const ListenBar = styled.div`
@@ -807,6 +841,8 @@ export default function SetDetail() {
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const [listening, setListening] = useState(false);
   const [listenIdx, setListenIdx] = useState(0);
   const [listenLoop, setListenLoop] = useState(false);
@@ -1045,6 +1081,19 @@ export default function SetDetail() {
     });
   }
 
+  function handleNameSave() {
+    setEditingName(false);
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      toast.error('Name is required');
+      return;
+    }
+    if (trimmed === set.name) return;
+    update(id, { ...set, name: trimmed }).catch(() => {
+      toast.error("Couldn't save name");
+    });
+  }
+
   async function handleDragEnd(event) {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -1193,7 +1242,23 @@ export default function SetDetail() {
   return (
     <Page>
       <PageHeader
-        title={set.name}
+        title={editingName ? (
+          <NameInput
+            autoFocus
+            value={nameInput}
+            onChange={e => setNameInput(e.target.value)}
+            onBlur={handleNameSave}
+            onKeyDown={e => {
+              if (e.key === 'Enter') e.target.blur();
+              if (e.key === 'Escape') setEditingName(false);
+            }}
+          />
+        ) : (
+          <TitleEditBtn onClick={() => { setNameInput(set.name); setEditingName(true); }} title="Edit set name">
+            <span>{set.name}</span>
+            <Pencil size={13} strokeWidth={2} />
+          </TitleEditBtn>
+        )}
         back="/sets"
         actions={
           <DesktopActions>
