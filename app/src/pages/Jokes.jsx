@@ -105,9 +105,12 @@ const FilterBtn = styled.button`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.border};
-  background: ${({ $active, theme }) => $active ? theme.primaryLight : 'transparent'};
-  color: ${({ $active, theme }) => $active ? theme.primary : theme.textMuted};
+  border: 1px solid ${({ $active, $stage, theme }) =>
+    $active ? (STAGE_COLOR[$stage]?.color ?? theme.primary) : theme.border};
+  background: ${({ $active, $stage, theme }) =>
+    $active ? (STAGE_COLOR[$stage]?.bg ?? theme.primaryLight) : 'transparent'};
+  color: ${({ $active, $stage, theme }) =>
+    $active ? (STAGE_COLOR[$stage]?.color ?? theme.primary) : theme.textMuted};
   min-height: 1.875rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -540,7 +543,7 @@ export default function Jokes() {
 
       <Filters>
         {STAGE_FILTERS.map(({ value, label }) => (
-          <FilterBtn key={value} $active={stage === value} onClick={() => setStage(value)}>
+          <FilterBtn key={value} $active={stage === value} $stage={value} onClick={() => setStage(value)}>
             {label}
           </FilterBtn>
         ))}
