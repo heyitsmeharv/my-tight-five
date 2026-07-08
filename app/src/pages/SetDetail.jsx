@@ -56,6 +56,7 @@ const TimingBar = styled.div`
   border-radius: 0.375rem;
   font-size: 0.85rem;
   min-width: 0;
+  margin-top: 1rem;
 `;
 
 const BarTrack = styled.div`
