@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ulid } from 'ulid';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { Plus, X, Users, FileText, ThumbsUp, Minus, Bomb } from 'lucide-react';
+import { Plus, X, Users, FileText, ThumbsUp, Minus, Bomb, Video } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
+import { getVideoUploadUrl, deleteVideoFile } from '../utils/api';
 import { Input, Textarea, Select, Label, FormGroup } from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import VideoModal from '../components/ui/VideoModal';
 import { GigsPageSkeleton } from '../components/ui/Skeleton';
 import { REACTION_COLORS } from '../components/ReactionWidget';
 
@@ -126,6 +128,25 @@ const GigMetaItem = styled.span`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+const WatchBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.primary};
+  background: ${({ theme }) => theme.primaryLight};
+  border: 1px solid ${({ theme }) => theme.primary};
+  padding: 0.1875rem 0.5rem;
+  border-radius: 99px;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.8; }
+`;
+
 const GigNotes = styled.p`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.textMuted};
@@ -218,6 +239,82 @@ const RateBtn = styled.button`
   }
 `;
 
+const VideoUploadLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px dashed ${({ theme }) => theme.border};
+  border-radius: ${({ theme }) => theme.radiusSm};
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover { border-color: ${({ theme }) => theme.primary}; color: ${({ theme }) => theme.text}; }
+`;
+
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
+const VideoProgressWrap = styled.div`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const VideoProgressBar = styled.div`
+  height: 4px;
+  background: ${({ theme }) => theme.border};
+  border-radius: 2px;
+  margin-top: 0.375rem;
+  overflow: hidden;
+`;
+
+const VideoProgressFill = styled.div`
+  height: 100%;
+  width: ${({ $pct }) => $pct}%;
+  background: ${({ theme }) => theme.primary};
+  border-radius: 2px;
+  transition: width 0.2s ease;
+`;
+
+const VideoAttached = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const VideoPreviewWrap = styled.div`
+  position: relative;
+`;
+
+const RemoveVideoBtn = styled(Button)`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+`;
+
+const VideoAttachedChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.82rem;
+  color: ${({ theme }) => theme.text};
+  padding: 0.5rem 0.625rem;
+  padding-right: 2.5rem;
+  background: ${({ theme }) => theme.bgInput};
+  border-radius: ${({ theme }) => theme.radiusSm};
+`;
+
+const GigVideoPlayer = styled.video`
+  width: 100%;
+  max-height: 200px;
+  border-radius: ${({ theme }) => theme.radiusSm};
+  background: #000;
+  display: block;
+`;
+
 function formatGigDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
@@ -229,7 +326,15 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const EMPTY_FORM = { date: todayIso(), venue: '', setId: '', audienceSize: '', notes: '', ratings: {} };
+const EMPTY_FORM = { date: todayIso(), venue: '', setId: '', audienceSize: '', notes: '', video_url: null, ratings: {} };
+
+const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024;
+
+function videoKey(url) {
+  if (!url) return null;
+  if (url.startsWith('video/')) return url;
+  try { return new URL(url).pathname.slice(1); } catch { return null; }
+}
 
 export default function Gigs() {
   const { items: gigs, loading: gigsLoading, create, update, remove } = useResource('gigs');
@@ -245,8 +350,22 @@ export default function Gigs() {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [watchingUrl, setWatchingUrl] = useState(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoLocalUrl, setVideoLocalUrl] = useState(null);
+  const newGigIdRef = useRef(ulid());
+  const videoLocalUrlRef = useRef(null);
 
   useEffect(() => { document.title = 'Gigs | My Tight Five'; }, []);
+
+  useEffect(() => { videoLocalUrlRef.current = videoLocalUrl; }, [videoLocalUrl]);
+  useEffect(() => () => { if (videoLocalUrlRef.current) URL.revokeObjectURL(videoLocalUrlRef.current); }, []);
+
+  function clearVideoLocalPreview() {
+    if (videoLocalUrlRef.current) URL.revokeObjectURL(videoLocalUrlRef.current);
+    setVideoLocalUrl(null);
+  }
 
   if (gigsLoading || setsLoading || jokesLoading) return <GigsPageSkeleton />;
 
@@ -271,10 +390,13 @@ export default function Gigs() {
   function openForm() {
     setEditingGigId(null);
     setForm({ ...EMPTY_FORM, date: todayIso() });
+    newGigIdRef.current = ulid();
+    clearVideoLocalPreview();
     setShowForm(true);
   }
 
   function closeForm() {
+    clearVideoLocalPreview();
     setShowForm(false);
   }
 
@@ -290,12 +412,15 @@ export default function Gigs() {
       setId: gig.setId || '',
       audienceSize: gig.audienceSize != null ? String(gig.audienceSize) : '',
       notes: gig.notes || '',
+      video_url: gig.video_url || null,
       ratings: gigRatings,
     });
+    clearVideoLocalPreview();
     setEditingGigId(gig.id);
   }
 
   function closeEdit() {
+    clearVideoLocalPreview();
     setEditingGigId(null);
   }
 
@@ -305,6 +430,48 @@ export default function Gigs() {
     } else {
       setForm(prev => ({ ...prev, ratings: { ...prev.ratings, [jokeId]: rating } }));
     }
+  }
+
+  async function handleVideoSelect(e, isEdit) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_VIDEO_SIZE) return toast.error('File is too large. Maximum size is 2 GB.');
+
+    clearVideoLocalPreview();
+    setVideoLocalUrl(URL.createObjectURL(file));
+
+    const gigId = isEdit ? editingGigId : newGigIdRef.current;
+    setVideoUploading(true);
+    setVideoProgress(0);
+    try {
+      const { uploadUrl, videoUrl } = await getVideoUploadUrl(gigId, file.type);
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.upload.onprogress = ev => {
+          if (ev.lengthComputable) setVideoProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+        xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`));
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.send(file);
+      });
+      if (isEdit) fieldEdit('video_url', videoUrl); else field('video_url', videoUrl);
+      toast.success('Video uploaded');
+    } catch {
+      toast.error("Couldn't upload video");
+    } finally {
+      setVideoUploading(false);
+      setVideoProgress(0);
+    }
+  }
+
+  function handleRemoveVideo(isEdit) {
+    const gigId = isEdit ? editingGigId : newGigIdRef.current;
+    clearVideoLocalPreview();
+    if (isEdit) fieldEdit('video_url', null); else field('video_url', null);
+    deleteVideoFile(gigId).catch(() => {});
   }
 
   function renderJokeRatings(selectedSetId, ratingsMap, isEdit) {
@@ -347,13 +514,56 @@ export default function Gigs() {
     );
   }
 
+  function renderVideoField(isEdit) {
+    const url = isEdit ? editForm.video_url : form.video_url;
+    const previewSrc = videoLocalUrl || (url && url.startsWith('https://') ? url : null);
+    return (
+      <FormGroup>
+        <Label>Video (optional)</Label>
+        {url || videoLocalUrl ? (
+          <VideoAttached>
+            <VideoPreviewWrap>
+              {previewSrc ? (
+                <GigVideoPlayer src={previewSrc} controls preload="metadata" />
+              ) : (
+                <VideoAttachedChip><Video size={14} strokeWidth={2} />Video attached</VideoAttachedChip>
+              )}
+              <RemoveVideoBtn
+                type="button"
+                $variant="ghost"
+                $size="sm"
+                disabled={videoUploading}
+                onClick={() => handleRemoveVideo(isEdit)}
+                aria-label="Remove video"
+              >
+                <X size={14} strokeWidth={2} />
+              </RemoveVideoBtn>
+            </VideoPreviewWrap>
+            {videoUploading && (
+              <VideoProgressWrap>
+                Uploading… {videoProgress}%
+                <VideoProgressBar><VideoProgressFill $pct={videoProgress} /></VideoProgressBar>
+              </VideoProgressWrap>
+            )}
+          </VideoAttached>
+        ) : (
+          <VideoUploadLabel>
+            <Video size={16} strokeWidth={2} />
+            Add video
+            <HiddenFileInput type="file" accept="video/*" onChange={e => handleVideoSelect(e, isEdit)} />
+          </VideoUploadLabel>
+        )}
+      </FormGroup>
+    );
+  }
+
   async function handleSave(e) {
     e.preventDefault();
     if (!form.venue.trim()) return toast.error('Venue is required');
     if (!form.date) return toast.error('Date is required');
     setSaving(true);
     try {
-      const gigId = ulid();
+      const gigId = newGigIdRef.current;
       await create({
         id: gigId,
         date: form.date,
@@ -361,6 +571,7 @@ export default function Gigs() {
         setId: form.setId || null,
         audienceSize: form.audienceSize ? parseInt(form.audienceSize, 10) : null,
         notes: form.notes.trim() || null,
+        video_url: videoKey(form.video_url),
       });
       const ratingEntries = Object.entries(form.ratings);
       if (ratingEntries.length > 0) {
@@ -389,6 +600,7 @@ export default function Gigs() {
         setId: editForm.setId || null,
         audienceSize: editForm.audienceSize ? parseInt(editForm.audienceSize, 10) : null,
         notes: editForm.notes.trim() || null,
+        video_url: videoKey(editForm.video_url),
       });
       const oldReactions = reactions.filter(r => r.gigId === editingGigId);
       await Promise.all(oldReactions.map(r => removeReaction(r.id)));
@@ -462,10 +674,12 @@ export default function Gigs() {
               </Select>
             </FormGroup>
 
-            <FormGroup style={{ marginBottom: 0 }}>
+            <FormGroup>
               <Label>Notes</Label>
               <Textarea placeholder="How did it go?" value={form.notes} onChange={e => field('notes', e.target.value)} rows={3} />
             </FormGroup>
+
+            {renderVideoField(false)}
 
             {renderJokeRatings(form.setId, form.ratings, false)}
 
@@ -517,10 +731,12 @@ export default function Gigs() {
                     </Select>
                   </FormGroup>
 
-                  <FormGroup style={{ marginBottom: 0 }}>
+                  <FormGroup>
                     <Label>Notes</Label>
                     <Textarea placeholder="How did it go?" value={editForm.notes} onChange={e => fieldEdit('notes', e.target.value)} rows={3} />
                   </FormGroup>
+
+                  {renderVideoField(true)}
 
                   {renderJokeRatings(editForm.setId, editForm.ratings, true)}
 
@@ -550,6 +766,12 @@ export default function Gigs() {
                       {gig.audienceSize}
                     </GigMetaItem>
                   )}
+                  {gig.video_url && (
+                    <WatchBtn type="button" onClick={e => { e.stopPropagation(); setWatchingUrl(gig.video_url); }}>
+                      <Video size={11} strokeWidth={2} />
+                      Watch
+                    </WatchBtn>
+                  )}
                 </GigMeta>
                 {gig.notes && <GigNotes>{gig.notes}</GigNotes>}
                 <DeleteBtn
@@ -574,6 +796,10 @@ export default function Gigs() {
           onCancel={() => setDeleting(null)}
           loading={deleteLoading}
         />
+      )}
+
+      {watchingUrl && (
+        <VideoModal url={watchingUrl} onClose={() => setWatchingUrl(null)} />
       )}
     </Page>
   );

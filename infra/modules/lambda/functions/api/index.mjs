@@ -161,8 +161,8 @@ export async function handler(event) {
         ExpressionAttributeValues: { ':pk': PK, ':sk': `${pfx}#` },
       }));
       const items = (result.Items || []).map(({ PK: _pk, SK: _sk, ...rest }) => rest);
-      if (resource === 'videos') return respond(200, await resolveVideoUrls(items), origin);
-      return respond(200, await resolveAudioUrls(items), origin);
+      const resolved = await resolveVideoUrls(await resolveAudioUrls(items));
+      return respond(200, resolved, origin);
     }
 
     if (method === 'POST') {
@@ -186,27 +186,20 @@ export async function handler(event) {
       const { PK: _pk, SK: _sk, ...rest } = body;
       const item = { PK, SK: `${pfx}#${id}`, ...rest };
       await client.send(new PutCommand({ TableName: TABLE, Item: item }));
-      const resolver = resource === 'videos' ? resolveVideoUrls : resolveAudioUrls;
-      const [resolved] = await resolver([rest]);
+      const [resolved] = await resolveVideoUrls(await resolveAudioUrls([rest]));
       return respond(200, resolved, origin);
     }
 
     if (method === 'DELETE') {
       if (!id) return respond(400, { error: 'Missing id' }, origin);
       await client.send(new DeleteCommand({ TableName: TABLE, Key: { PK, SK: `${pfx}#${id}` } }));
-      if (resource === 'jokes' || resource === 'sets') {
-        await Promise.allSettled([
-          s3.send(new DeleteObjectCommand({ Bucket: AUDIO_BUCKET, Key: `audio/${userId}/${id}.webm` })),
-          s3.send(new DeleteObjectCommand({ Bucket: AUDIO_BUCKET, Key: `audio/${userId}/${id}.mp4` })),
-        ]);
-      }
-      if (resource === 'videos') {
-        await Promise.allSettled([
-          s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.mp4` })),
-          s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.webm` })),
-          s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.mov` })),
-        ]);
-      }
+      await Promise.allSettled([
+        s3.send(new DeleteObjectCommand({ Bucket: AUDIO_BUCKET, Key: `audio/${userId}/${id}.webm` })),
+        s3.send(new DeleteObjectCommand({ Bucket: AUDIO_BUCKET, Key: `audio/${userId}/${id}.mp4` })),
+        s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.mp4` })),
+        s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.webm` })),
+        s3.send(new DeleteObjectCommand({ Bucket: VIDEO_BUCKET, Key: `video/${userId}/${id}.mov` })),
+      ]);
       return respond(200, { deleted: id }, origin);
     }
 

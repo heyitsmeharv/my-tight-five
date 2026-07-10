@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { Plus, CornerDownLeft, Users, FileText } from 'lucide-react';
+import { Plus, CornerDownLeft, Users, FileText, Video } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { ulid } from 'ulid';
 import { post } from '../utils/api';
@@ -12,6 +12,7 @@ import Button from '../components/ui/Button';
 import Logo from '../components/Logo';
 import StageBadge from '../components/ui/StageBadge';
 import InlinePlayer from '../components/ui/InlinePlayer';
+import VideoModal from '../components/ui/VideoModal';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
 import { formatDuration, relativeTime } from '../utils/time';
 import { STAGE_COLOR } from '../utils/stages';
@@ -376,6 +377,26 @@ const GigRowMeta = styled.span`
   flex-shrink: 0;
 `;
 
+const GigRowWatchBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.primary};
+  background: ${({ theme }) => theme.primaryLight};
+  border: 1px solid ${({ theme }) => theme.primary};
+  padding: 0.125rem 0.4375rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.8; }
+`;
+
 function formatGigDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
@@ -389,6 +410,7 @@ export default function Dashboard() {
   const { mode, toggle } = useTheme();
   const [idea, setIdea] = useState('');
   const [saving, setSaving] = useState(false);
+  const [watchingUrl, setWatchingUrl] = useState(null);
 
   const { items: jokes, loading: jokesLoading } = useResource('jokes');
   const { items: sets, loading: setsLoading } = useResource('sets');
@@ -476,10 +498,19 @@ export default function Dashboard() {
                 {gig.audienceSize != null && (
                   <GigRowMeta><Users size={10} strokeWidth={2} />{gig.audienceSize}</GigRowMeta>
                 )}
+                {gig.video_url && (
+                  <GigRowWatchBtn type="button" onClick={e => { e.stopPropagation(); setWatchingUrl(gig.video_url); }}>
+                    <Video size={10} strokeWidth={2} />Watch
+                  </GigRowWatchBtn>
+                )}
               </GigRow>
             ))}
           </GigList>
         </>
+      )}
+
+      {watchingUrl && (
+        <VideoModal url={watchingUrl} onClose={() => setWatchingUrl(null)} />
       )}
 
       {recentJokes.length !== 0 && (
