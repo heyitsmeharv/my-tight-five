@@ -415,9 +415,10 @@ export default function Dashboard() {
   const { items: jokes, loading: jokesLoading } = useResource('jokes');
   const { items: sets, loading: setsLoading } = useResource('sets');
   const { items: gigs, loading: gigsLoading } = useResource('gigs');
+  const { items: reactions, loading: reactionsLoading } = useResource('reactions');
   useEffect(() => { document.title = 'My Tight Five'; }, []);
 
-  if (jokesLoading || setsLoading || gigsLoading) return <DashboardSkeleton />;
+  if (jokesLoading || setsLoading || gigsLoading || reactionsLoading) return <DashboardSkeleton />;
 
   const recentJokes = jokes.slice(0, 8);
 
@@ -428,9 +429,12 @@ export default function Dashboard() {
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     .slice(0, 3);
   const polishedJokes = jokes.filter(j => j.stage === 'polished');
-  const polishedMinutes = Math.round(
-    polishedJokes.reduce((acc, j) => acc + (j.duration_seconds || 0), 0) / 60
+  const totalMinutes = Math.round(
+    jokes.reduce((acc, j) => acc + (j.duration_seconds || 0), 0) / 60
   );
+  const killRate = reactions.length
+    ? Math.round((reactions.filter(r => r.rating === 1).length / reactions.length) * 100)
+    : null;
 
   async function handleQuickIdea(e) {
     e.preventDefault();
@@ -463,12 +467,12 @@ export default function Dashboard() {
           <StatLabel>Polished</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue>{`${polishedMinutes}m`}</StatValue>
+          <StatValue>{`${totalMinutes}m`}</StatValue>
           <StatLabel>Material</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue>{sets.length}</StatValue>
-          <StatLabel>Sets</StatLabel>
+          <StatValue>{killRate === null ? '-' : `${killRate}%`}</StatValue>
+          <StatLabel>Kill Rate</StatLabel>
         </StatCard>
       </StatRow>
 

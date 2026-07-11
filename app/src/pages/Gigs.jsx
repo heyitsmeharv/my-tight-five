@@ -426,10 +426,17 @@ export default function Gigs() {
   }
 
   function setRating(jokeId, rating, isEdit) {
+    const updateRatings = ratings => {
+      if (ratings[jokeId] === rating) {
+        const { [jokeId]: _omit, ...rest } = ratings;
+        return rest;
+      }
+      return { ...ratings, [jokeId]: rating };
+    };
     if (isEdit) {
-      setEditForm(prev => ({ ...prev, ratings: { ...prev.ratings, [jokeId]: rating } }));
+      setEditForm(prev => ({ ...prev, ratings: updateRatings(prev.ratings) }));
     } else {
-      setForm(prev => ({ ...prev, ratings: { ...prev.ratings, [jokeId]: rating } }));
+      setForm(prev => ({ ...prev, ratings: updateRatings(prev.ratings) }));
     }
   }
 
