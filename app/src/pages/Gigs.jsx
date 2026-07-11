@@ -143,6 +143,7 @@ const WatchBtn = styled.button`
   padding: 0.1875rem 0.5rem;
   border-radius: 99px;
   transition: opacity 0.15s;
+  margin-left: auto;
 
   &:hover { opacity: 0.8; }
 `;
