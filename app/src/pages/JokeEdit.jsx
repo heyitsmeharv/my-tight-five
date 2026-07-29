@@ -216,7 +216,7 @@ export default function JokeEdit() {
   const navigate = useNavigate();
   const { items: jokes, loading: jokesLoading, create, update, remove } = useResource('jokes');
   const { items: sets, update: updateSet } = useResource('sets');
-  const { items: jokeHistory, create: createHistory, remove: removeHistory } = useResource('jokeHistory');
+  const { items: jokeHistory, create: createHistory, update: updateHistory, remove: removeHistory } = useResource('jokeHistory');
   const { items: reactions } = useResource('reactions');
   const isNew = !id;
   const fromIdea = location.state?.fromIdea;
@@ -308,17 +308,43 @@ export default function JokeEdit() {
   }
 
   async function handleDeleteVersion() {
-    const historyId = deletingVersion;
+    const target = deletingVersion;
     setDeleteVersionLoading(true);
     try {
-      const entry = jokeHistory.find(h => h.id === historyId);
-      const audioId = audioIdFromUrl(entry?.audio_url);
-      if (audioId) { try { await deleteAudioFile(audioId); } catch {} }
-      await removeHistory(historyId);
-      if (activeVersion === historyId) {
-        setActiveVersion('latest');
-        const joke = jokes.find(j => j.id === id);
-        if (joke) applyVersionToForm(joke);
+      if (target === 'latest') {
+        const promoted = jokeHistoryForJoke[0]; // most recently archived entry becomes the new Latest
+        if (promoted) {
+          const currentJoke = jokes.find(j => j.id === id);
+          const staleAudioId = audioIdFromUrl(currentJoke?.audio_url);
+          const promotedAudioId = audioIdFromUrl(promoted.audio_url);
+          await update(id, {
+            setup: promoted.setup || '',
+            punchline: promoted.punchline || '',
+            followup: promoted.followup || '',
+            stage: promoted.stage || 'draft',
+            duration_seconds: promoted.duration_seconds || null,
+            notes: promoted.notes || '',
+            tags: promoted.tags || [],
+            callback_to: promoted.callback_to || null,
+            audio_url: promoted.audio_url || null,
+          });
+          await removeHistory(promoted.id);
+          if (staleAudioId && staleAudioId !== promotedAudioId) {
+            try { await deleteAudioFile(staleAudioId); } catch {}
+          }
+          setActiveVersion('latest');
+          applyVersionToForm(promoted);
+        }
+      } else {
+        const entry = jokeHistory.find(h => h.id === target);
+        const audioId = audioIdFromUrl(entry?.audio_url);
+        if (audioId) { try { await deleteAudioFile(audioId); } catch {} }
+        await removeHistory(target);
+        if (activeVersion === target) {
+          setActiveVersion('latest');
+          const joke = jokes.find(j => j.id === id);
+          if (joke) applyVersionToForm(joke);
+        }
       }
       setDeletingVersion(null);
     } catch {
@@ -375,6 +401,21 @@ export default function JokeEdit() {
     });
   }
 
+  async function persistEdit(data) {
+    if (activeVersion === 'latest') {
+      await maybeArchiveJoke(data);
+      await update(id, data);
+    } else {
+      const entry = jokeHistory.find(h => h.id === activeVersion);
+      const oldAudioId = audioIdFromUrl(entry?.audio_url);
+      const newAudioId = audioIdFromUrl(data.audio_url);
+      await updateHistory(activeVersion, { ...data, jokeId: id, created_at: entry?.created_at });
+      if (oldAudioId && oldAudioId !== newAudioId) {
+        try { await deleteAudioFile(oldAudioId); } catch {}
+      }
+    }
+  }
+
   async function handleSave() {
     if (!form.setup.trim()) return toast.error('Add a setup first');
     if (recordingStatus === 'recording' || recordingStatus === 'requesting') {
@@ -397,8 +438,7 @@ export default function JokeEdit() {
       if (isNew) {
         await create({ ...data, id: pendingIdRef.current });
       } else {
-        await maybeArchiveJoke(data);
-        await update(id, data);
+        await persistEdit(data);
       }
       setIsDirty(false);
       toast.success('Saved');
@@ -434,8 +474,7 @@ export default function JokeEdit() {
       if (isNew) {
         await create({ ...data, id: pendingIdRef.current });
       } else {
-        await maybeArchiveJoke(data);
-        await update(id, data);
+        await persistEdit(data);
       }
       setIsDirty(false);
       toast.success('Saved');
@@ -518,7 +557,14 @@ export default function JokeEdit() {
                 Latest
               </VersionTabBtn>
             </VersionTabRow>
-            {activeHistoryEntry && (
+            {activeVersion === 'latest' ? (
+              <VersionMeta>
+                <VersionTimestamp>Current version</VersionTimestamp>
+                <VersionDeleteBtn type="button" onClick={() => setDeletingVersion('latest')}>
+                  <X size={12} strokeWidth={2} /> Delete version
+                </VersionDeleteBtn>
+              </VersionMeta>
+            ) : activeHistoryEntry && (
               <VersionMeta>
                 <VersionTimestamp>Saved {relativeTime(activeHistoryEntry.created_at)}</VersionTimestamp>
                 <VersionDeleteBtn type="button" onClick={() => setDeletingVersion(activeHistoryEntry.id)}>
@@ -654,8 +700,10 @@ export default function JokeEdit() {
 
       {deletingVersion && (
         <ConfirmModal
-          title="Delete this version?"
-          message="This will permanently remove this saved version from the joke's history."
+          title={deletingVersion === 'latest' ? 'Delete current version?' : 'Delete this version?'}
+          message={deletingVersion === 'latest'
+            ? 'This will discard the current version. The most recent saved version will become the new Latest.'
+            : "This will permanently remove this saved version from the joke's history."}
           onConfirm={handleDeleteVersion}
           onCancel={() => setDeletingVersion(null)}
           loading={deleteVersionLoading}
