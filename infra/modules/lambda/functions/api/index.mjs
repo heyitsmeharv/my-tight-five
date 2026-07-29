@@ -71,6 +71,7 @@ function prefix(resource) {
   const map = {
     ideas: 'IDEA',
     jokes: 'JOKE',
+    jokeHistory: 'JOKE_HISTORY',
     sets: 'SET',
     videos: 'VIDEO',
     gigs: 'GIG',

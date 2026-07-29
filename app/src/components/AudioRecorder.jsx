@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { ulid } from 'ulid';
 import styled, { keyframes } from 'styled-components';
 import { Mic, StopCircle, Trash2, AlertCircle } from 'lucide-react';
 import { getAudioUploadUrl, deleteAudioFile } from '../utils/api';
+import { audioIdFromUrl } from '../utils/audio';
 import { formatTimer } from '../utils/time';
 import { Label, FormGroup } from './ui/Input';
 import Button from './ui/Button';
@@ -130,9 +132,10 @@ const MIME_TYPE = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSu
   : 'audio/mp4';
 
 
-const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onChange, onDuration, onStatusChange, maxDuration = 300 }, ref) {
+const AudioRecorder = forwardRef(function AudioRecorder({ audioUrl, onChange, onDuration, onStatusChange, maxDuration = 300 }, ref) {
   const [status, setStatus] = useState(audioUrl ? 'done' : 'idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const recordingIdRef = useRef(null);
 
   function applyStatus(next) {
     setStatus(next);
@@ -163,6 +166,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
 
   useEffect(() => {
     if (audioUrl && status === 'idle') applyStatus('done');
+    else if (!audioUrl && status === 'done') applyStatus('idle');
   }, [audioUrl, status]);
 
   useEffect(() => {
@@ -240,6 +244,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
   async function startRecording() {
     setErrorMsg('');
     applyStatus('requesting');
+    recordingIdRef.current = ulid();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -288,7 +293,7 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
     }
     applyStatus('uploading');
     try {
-      const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(jokeId, MIME_TYPE);
+      const { uploadUrl, audioUrl: newAudioUrl } = await getAudioUploadUrl(recordingIdRef.current, MIME_TYPE);
       await fetch(uploadUrl, { method: 'PUT', body: blobRef.current, headers: { 'Content-Type': MIME_TYPE } });
       onChange(newAudioUrl);
       applyStatus('done');
@@ -308,9 +313,10 @@ const AudioRecorder = forwardRef(function AudioRecorder({ jokeId, audioUrl, onCh
   }
 
   async function deleteRecording() {
-    try {
-      await deleteAudioFile(jokeId);
-    } catch { /* best-effort */ }
+    const audioId = audioIdFromUrl(audioUrl);
+    if (audioId) {
+      try { await deleteAudioFile(audioId); } catch { /* best-effort */ }
+    }
     onChange(null);
     applyStatus('idle');
   }

@@ -418,6 +418,13 @@ export default function Gigs() {
     });
     clearVideoLocalPreview();
     setEditingGigId(gig.id);
+
+    if (gig.setId && (!gig.setJokeIds || !gig.setName)) {
+      const selectedSet = setMap[gig.setId];
+      if (selectedSet) {
+        update(gig.id, { ...gig, setJokeIds: selectedSet.joke_ids || [], setName: selectedSet.name || null }).catch(() => {});
+      }
+    }
   }
 
   function closeEdit() {
@@ -482,9 +489,8 @@ export default function Gigs() {
     deleteVideoFile(gigId).catch(() => {});
   }
 
-  function renderJokeRatings(selectedSetId, ratingsMap, isEdit) {
-    const selectedSet = selectedSetId ? setMap[selectedSetId] : null;
-    const setJokes = (selectedSet?.joke_ids || []).map(jid => jokeMap[jid]).filter(Boolean);
+  function renderJokeRatings(jokeIds, ratingsMap, isEdit) {
+    const setJokes = (jokeIds || []).map(jid => jokeMap[jid]).filter(Boolean);
     if (!setJokes.length) return null;
     return (
       <JokeRatingSection>
@@ -572,11 +578,14 @@ export default function Gigs() {
     setSaving(true);
     try {
       const gigId = newGigIdRef.current;
+      const selectedSet = form.setId ? setMap[form.setId] : null;
       await create({
         id: gigId,
         date: form.date,
         venue: form.venue.trim(),
         setId: form.setId || null,
+        setJokeIds: selectedSet?.joke_ids || [],
+        setName: selectedSet?.name || null,
         audienceSize: form.audienceSize ? parseInt(form.audienceSize, 10) : null,
         notes: form.notes.trim() || null,
         video_url: videoKey(form.video_url),
@@ -602,10 +611,17 @@ export default function Gigs() {
     if (!editForm.date) return toast.error('Date is required');
     setUpdating(true);
     try {
+      const editingGig = gigs.find(g => g.id === editingGigId);
+      const setChanged = editForm.setId !== (editingGig?.setId || '');
+      const selectedSet = editForm.setId ? setMap[editForm.setId] : null;
+      const setJokeIds = (setChanged || !editingGig?.setJokeIds) ? (selectedSet?.joke_ids || []) : editingGig.setJokeIds;
+      const setName = (setChanged || !editingGig?.setName) ? (selectedSet?.name || null) : editingGig.setName;
       await update(editingGigId, {
         date: editForm.date,
         venue: editForm.venue.trim(),
         setId: editForm.setId || null,
+        setJokeIds,
+        setName,
         audienceSize: editForm.audienceSize ? parseInt(editForm.audienceSize, 10) : null,
         notes: editForm.notes.trim() || null,
         video_url: videoKey(editForm.video_url),
@@ -689,7 +705,7 @@ export default function Gigs() {
 
             {renderVideoField(false)}
 
-            {renderJokeRatings(form.setId, form.ratings, false)}
+            {renderJokeRatings(form.setId ? (setMap[form.setId]?.joke_ids || []) : [], form.ratings, false)}
 
             <SaveRow>
               <Button type="submit" $loading={saving} disabled={saving} style={{ width: '100%' }}>
@@ -746,7 +762,13 @@ export default function Gigs() {
 
                   {renderVideoField(true)}
 
-                  {renderJokeRatings(editForm.setId, editForm.ratings, true)}
+                  {renderJokeRatings(
+                    editForm.setId !== (gig.setId || '')
+                      ? (setMap[editForm.setId]?.joke_ids || [])
+                      : (gig.setJokeIds || setMap[editForm.setId]?.joke_ids || []),
+                    editForm.ratings,
+                    true
+                  )}
 
                   <SaveRow>
                     <Button type="submit" $loading={updating} disabled={updating} style={{ width: '100%' }}>
@@ -762,10 +784,10 @@ export default function Gigs() {
                 <GigDate>{formatGigDate(gig.date)}</GigDate>
                 <GigVenue>{gig.venue}</GigVenue>
                 <GigMeta>
-                  {linkedSet && (
+                  {(gig.setName || linkedSet) && (
                     <GigMetaItem>
                       <FileText size={11} strokeWidth={2} />
-                      {linkedSet.name || 'Untitled'}
+                      {gig.setName || linkedSet?.name || 'Untitled'}
                     </GigMetaItem>
                   )}
                   {gig.audienceSize != null && (

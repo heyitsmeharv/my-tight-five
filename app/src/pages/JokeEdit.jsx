@@ -3,9 +3,10 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ulid } from 'ulid';
 import styled from 'styled-components';
 import { toast } from 'react-toastify';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import { deleteAudioFile } from '../utils/api';
+import { audioKeyFromUrl, audioIdFromUrl } from '../utils/audio';
 import { JokeEditSkeleton } from '../components/ui/Skeleton';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -13,6 +14,7 @@ import ConfirmModal from '../components/ui/ConfirmModal';
 import { Select, Label, FormGroup } from '../components/ui/Input';
 import AudioRecorder from '../components/AudioRecorder';
 import { STAGES, STAGE_COLOR } from '../utils/stages';
+import { relativeTime } from '../utils/time';
 
 const Page = styled.div`
   padding-bottom: 5rem;
@@ -114,6 +116,65 @@ const DetailsPanel = styled.div`
   margin-bottom: 1.25rem;
 `;
 
+const VersionBar = styled.div`
+  margin-bottom: 1.25rem;
+`;
+
+const VersionTabRow = styled.div`
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+`;
+
+const VersionTabBtn = styled.button`
+  padding: 0.25rem 0.625rem;
+  border-radius: 99px;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : 'transparent'};
+  background: ${({ $active, theme }) => $active ? `${theme.primary}1a` : 'transparent'};
+  color: ${({ $active, theme }) => $active ? theme.primary : theme.textMuted};
+  cursor: pointer;
+  min-height: 1.875rem;
+  transition: all 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.primary}; }
+`;
+
+const VersionMeta = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+`;
+
+const VersionTimestamp = styled.div`
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const VersionDeleteBtn = styled.button`
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.text}; }
+`;
+
 const NoteTextarea = styled.textarea`
   width: 100%;
   background: transparent;
@@ -155,6 +216,8 @@ export default function JokeEdit() {
   const navigate = useNavigate();
   const { items: jokes, loading: jokesLoading, create, update, remove } = useResource('jokes');
   const { items: sets, update: updateSet } = useResource('sets');
+  const { items: jokeHistory, create: createHistory, remove: removeHistory } = useResource('jokeHistory');
+  const { items: reactions } = useResource('reactions');
   const isNew = !id;
   const fromIdea = location.state?.fromIdea;
 
@@ -170,9 +233,12 @@ export default function JokeEdit() {
     audio_url: null,
   });
   const [showDetails, setShowDetails] = useState(false);
+  const [activeVersion, setActiveVersion] = useState('latest');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deletingVersion, setDeletingVersion] = useState(null);
+  const [deleteVersionLoading, setDeleteVersionLoading] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState('idle');
   const [unsavedRecordingConfirm, setUnsavedRecordingConfirm] = useState(false);
   const [uploadingSave, setUploadingSave] = useState(false);
@@ -201,26 +267,66 @@ export default function JokeEdit() {
   }
 
   useEffect(() => {
-    if (!isNew) {
-      const joke = jokes.find(j => j.id === id);
-      if (joke) {
-        setForm({
-          setup: joke.setup || '',
-          punchline: joke.punchline || '',
-          followup: joke.followup || '',
-          stage: (joke.stage && joke.stage !== 'idea') ? joke.stage : 'draft',
-          duration_seconds: joke.duration_seconds || '',
-          notes: joke.notes || '',
-          category: joke.tags?.[0] || '',
-          callback_to: joke.callback_to || '',
-          audio_url: joke.audio_url || null,
-        });
-        if (joke.notes || joke.duration_seconds || joke.callback_to) {
-          setShowDetails(true);
-        }
-      }
+    setActiveVersion('latest');
+  }, [id]);
+
+  function applyVersionToForm(source) {
+    setForm(prev => ({
+      ...prev,
+      setup: source.setup || '',
+      punchline: source.punchline || '',
+      followup: source.followup || '',
+      stage: (source.stage && source.stage !== 'idea') ? source.stage : 'draft',
+      duration_seconds: source.duration_seconds || '',
+      notes: source.notes || '',
+      category: source.tags?.[0] || '',
+      callback_to: source.callback_to || '',
+      audio_url: source.audio_url || null,
+    }));
+    if (source.notes || source.duration_seconds || source.callback_to) {
+      setShowDetails(true);
     }
-  }, [id, jokes, isNew]);
+  }
+
+  useEffect(() => {
+    if (isNew || activeVersion !== 'latest') return;
+    const joke = jokes.find(j => j.id === id);
+    if (joke) applyVersionToForm(joke);
+  }, [id, jokes, isNew, activeVersion]);
+
+  function selectVersion(key) {
+    if (key === activeVersion) return;
+    setIsDirty(true);
+    setActiveVersion(key);
+    if (key === 'latest') {
+      const joke = jokes.find(j => j.id === id);
+      if (joke) applyVersionToForm(joke);
+    } else {
+      const entry = jokeHistory.find(h => h.id === key);
+      if (entry) applyVersionToForm(entry);
+    }
+  }
+
+  async function handleDeleteVersion() {
+    const historyId = deletingVersion;
+    setDeleteVersionLoading(true);
+    try {
+      const entry = jokeHistory.find(h => h.id === historyId);
+      const audioId = audioIdFromUrl(entry?.audio_url);
+      if (audioId) { try { await deleteAudioFile(audioId); } catch {} }
+      await removeHistory(historyId);
+      if (activeVersion === historyId) {
+        setActiveVersion('latest');
+        const joke = jokes.find(j => j.id === id);
+        if (joke) applyVersionToForm(joke);
+      }
+      setDeletingVersion(null);
+    } catch {
+      toast.error("Couldn't delete version");
+    } finally {
+      setDeleteVersionLoading(false);
+    }
+  }
 
   useEffect(() => {
     autoResize(setupRef);
@@ -239,10 +345,34 @@ export default function JokeEdit() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
-  function audioKey(url) {
-    if (!url) return null;
-    if (url.startsWith('audio/')) return url;
-    try { return new URL(url).pathname.slice(1); } catch { return null; }
+  async function maybeArchiveJoke(data) {
+    const original = jokes.find(j => j.id === id);
+    if (!original) return;
+    const wasTested = reactions.some(r => r.jokeId === id);
+    if (!wasTested) return;
+    const changed =
+      (original.setup || '') !== (data.setup || '') ||
+      (original.punchline || '') !== (data.punchline || '') ||
+      (original.followup || '') !== (data.followup || '') ||
+      (original.stage || '') !== (data.stage || '') ||
+      (original.duration_seconds || null) !== (data.duration_seconds || null) ||
+      (original.notes || '') !== (data.notes || '') ||
+      (original.callback_to || null) !== (data.callback_to || null) ||
+      (original.audio_url || null) !== (data.audio_url || null) ||
+      JSON.stringify(original.tags || []) !== JSON.stringify(data.tags || []);
+    if (!changed) return;
+    await createHistory({
+      jokeId: id,
+      setup: original.setup || '',
+      punchline: original.punchline || '',
+      followup: original.followup || '',
+      stage: original.stage || 'draft',
+      duration_seconds: original.duration_seconds || null,
+      notes: original.notes || '',
+      tags: original.tags || [],
+      callback_to: original.callback_to || null,
+      audio_url: original.audio_url || null,
+    });
   }
 
   async function handleSave() {
@@ -259,7 +389,7 @@ export default function JokeEdit() {
       const { category, audio_url, ...rest } = form;
       const data = {
         ...rest,
-        audio_url: audioKey(audio_url),
+        audio_url: audioKeyFromUrl(audio_url),
         tags: category.trim() ? [category.trim().toLowerCase().replace(/^#/, '')] : [],
         duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
         callback_to: form.callback_to || null,
@@ -267,6 +397,7 @@ export default function JokeEdit() {
       if (isNew) {
         await create({ ...data, id: pendingIdRef.current });
       } else {
+        await maybeArchiveJoke(data);
         await update(id, data);
       }
       setIsDirty(false);
@@ -291,7 +422,6 @@ export default function JokeEdit() {
     }
 
     setUnsavedRecordingConfirm(false);
-    const jokeId = isNew ? pendingIdRef.current : id;
     try {
       const { category, audio_url: _au, ...rest } = form;
       const data = {
@@ -304,6 +434,7 @@ export default function JokeEdit() {
       if (isNew) {
         await create({ ...data, id: pendingIdRef.current });
       } else {
+        await maybeArchiveJoke(data);
         await update(id, data);
       }
       setIsDirty(false);
@@ -317,7 +448,8 @@ export default function JokeEdit() {
         navigate(-1);
         return;
       }
-      try { await deleteAudioFile(jokeId); } catch {}
+      const orphanId = audioIdFromUrl(newAudioUrl);
+      if (orphanId) { try { await deleteAudioFile(orphanId); } catch {} }
       audioRecorderRef.current?.discard();
       set('audio_url', null);
       toast.error("Couldn't save");
@@ -333,6 +465,13 @@ export default function JokeEdit() {
       await Promise.all(affected.map(s =>
         updateSet(s.id, { ...s, joke_ids: s.joke_ids.filter(jid => jid !== id) })
       ));
+      const original = jokes.find(j => j.id === id);
+      const hist = jokeHistory.filter(h => h.jokeId === id);
+      const audioIds = [original?.audio_url, ...hist.map(h => h.audio_url)]
+        .map(audioIdFromUrl)
+        .filter(Boolean);
+      await Promise.allSettled(audioIds.map(aid => deleteAudioFile(aid)));
+      await Promise.all(hist.map(h => removeHistory(h.id)));
       await remove(id);
       setIsDirty(false);
       toast.success('Deleted');
@@ -346,6 +485,11 @@ export default function JokeEdit() {
   if (!isNew && jokesLoading) return <JokeEditSkeleton />;
 
   const otherJokes = jokes.filter(j => j.id !== id);
+  const jokeHistoryForJoke = jokeHistory.filter(h => h.jokeId === id); // newest first
+  const jokeHistoryChrono = [...jokeHistoryForJoke].reverse(); // oldest first, for v1/v2/... numbering
+  const activeHistoryEntry = activeVersion !== 'latest'
+    ? jokeHistoryForJoke.find(h => h.id === activeVersion)
+    : null;
 
   return (
     <Page>
@@ -357,6 +501,34 @@ export default function JokeEdit() {
         )}
       />
       <Body>
+        {!isNew && jokeHistoryForJoke.length > 0 && (
+          <VersionBar>
+            <VersionTabRow>
+              {jokeHistoryChrono.map((h, idx) => (
+                <VersionTabBtn
+                  key={h.id}
+                  type="button"
+                  $active={activeVersion === h.id}
+                  onClick={() => selectVersion(h.id)}
+                >
+                  v{idx + 1}
+                </VersionTabBtn>
+              ))}
+              <VersionTabBtn type="button" $active={activeVersion === 'latest'} onClick={() => selectVersion('latest')}>
+                Latest
+              </VersionTabBtn>
+            </VersionTabRow>
+            {activeHistoryEntry && (
+              <VersionMeta>
+                <VersionTimestamp>Saved {relativeTime(activeHistoryEntry.created_at)}</VersionTimestamp>
+                <VersionDeleteBtn type="button" onClick={() => setDeletingVersion(activeHistoryEntry.id)}>
+                  <X size={12} strokeWidth={2} /> Delete version
+                </VersionDeleteBtn>
+              </VersionMeta>
+            )}
+          </VersionBar>
+        )}
+
         <WritingArea>
           <BitTextarea
             ref={setupRef}
@@ -414,7 +586,6 @@ export default function JokeEdit() {
 
         <AudioRecorder
           ref={audioRecorderRef}
-          jokeId={isNew ? pendingIdRef.current : id}
           audioUrl={form.audio_url}
           onChange={url => set('audio_url', url)}
           onDuration={secs => set('duration_seconds', secs)}
@@ -478,6 +649,16 @@ export default function JokeEdit() {
           onConfirm={handleDelete}
           onCancel={() => setDeleting(false)}
           loading={deleteLoading}
+        />
+      )}
+
+      {deletingVersion && (
+        <ConfirmModal
+          title="Delete this version?"
+          message="This will permanently remove this saved version from the joke's history."
+          onConfirm={handleDeleteVersion}
+          onCancel={() => setDeletingVersion(null)}
+          loading={deleteVersionLoading}
         />
       )}
 
