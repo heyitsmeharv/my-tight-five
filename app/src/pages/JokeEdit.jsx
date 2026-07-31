@@ -371,22 +371,15 @@ export default function JokeEdit() {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
-  async function maybeArchiveJoke(data) {
-    const original = jokes.find(j => j.id === id);
-    if (!original) return;
+  async function maybeArchiveJoke(original, data) {
+    if (!original) return false;
     const wasTested = reactions.some(r => r.jokeId === id);
-    if (!wasTested) return;
+    if (!wasTested) return false;
     const changed =
       (original.setup || '') !== (data.setup || '') ||
       (original.punchline || '') !== (data.punchline || '') ||
-      (original.followup || '') !== (data.followup || '') ||
-      (original.stage || '') !== (data.stage || '') ||
-      (original.duration_seconds || null) !== (data.duration_seconds || null) ||
-      (original.notes || '') !== (data.notes || '') ||
-      (original.callback_to || null) !== (data.callback_to || null) ||
-      (original.audio_url || null) !== (data.audio_url || null) ||
-      JSON.stringify(original.tags || []) !== JSON.stringify(data.tags || []);
-    if (!changed) return;
+      (original.followup || '') !== (data.followup || '');
+    if (!changed) return false;
     await createHistory({
       jokeId: id,
       setup: original.setup || '',
@@ -399,12 +392,25 @@ export default function JokeEdit() {
       callback_to: original.callback_to || null,
       audio_url: original.audio_url || null,
     });
+    return true;
   }
 
   async function persistEdit(data) {
     if (activeVersion === 'latest') {
-      await maybeArchiveJoke(data);
-      await update(id, data);
+      const original = jokes.find(j => j.id === id);
+      const archived = await maybeArchiveJoke(original, data);
+      if (archived) {
+        // The old recording now belongs to the archived version; the new
+        // version starts with no audio so the user records a fresh take.
+        const discardedAudioId = audioIdFromUrl(data.audio_url);
+        const originalAudioId = audioIdFromUrl(original?.audio_url);
+        await update(id, { ...data, audio_url: null });
+        if (discardedAudioId && discardedAudioId !== originalAudioId) {
+          try { await deleteAudioFile(discardedAudioId); } catch {}
+        }
+      } else {
+        await update(id, data);
+      }
     } else {
       const entry = jokeHistory.find(h => h.id === activeVersion);
       const oldAudioId = audioIdFromUrl(entry?.audio_url);
