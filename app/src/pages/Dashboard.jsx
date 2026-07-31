@@ -492,23 +492,27 @@ export default function Dashboard() {
             <Button $variant="link" $size="sm" onClick={() => navigate('/gigs')}>All</Button>
           </SectionHeader>
           <GigList>
-            {recentGigs.map(gig => (
-              <GigRow key={gig.id} onClick={() => navigate('/gigs')}>
-                <GigRowDate>{formatGigDate(gig.date)}</GigRowDate>
-                <GigRowVenue>{gig.venue}</GigRowVenue>
-                {setMap[gig.setId] && (
-                  <GigRowMeta><FileText size={10} strokeWidth={2} />{setMap[gig.setId].name}</GigRowMeta>
-                )}
-                {gig.audienceSize != null && (
-                  <GigRowMeta><Users size={10} strokeWidth={2} />{gig.audienceSize}</GigRowMeta>
-                )}
-                {gig.video_url && (
-                  <GigRowWatchBtn type="button" onClick={e => { e.stopPropagation(); setWatchingUrl(gig.video_url); }}>
-                    <Video size={10} strokeWidth={2} />Watch
-                  </GigRowWatchBtn>
-                )}
-              </GigRow>
-            ))}
+            {recentGigs.map(gig => {
+              const setIds = gig.setIds || (gig.setId ? [gig.setId] : []);
+              const setNames = gig.setNames || (gig.setName ? [gig.setName] : setIds.map(id => setMap[id]?.name).filter(Boolean));
+              return (
+                <GigRow key={gig.id} onClick={() => navigate('/gigs')}>
+                  <GigRowDate>{formatGigDate(gig.date)}</GigRowDate>
+                  <GigRowVenue>{gig.venue}</GigRowVenue>
+                  {setNames.length > 0 && (
+                    <GigRowMeta><FileText size={10} strokeWidth={2} />{setNames.join(', ')}</GigRowMeta>
+                  )}
+                  {gig.audienceSize != null && (
+                    <GigRowMeta><Users size={10} strokeWidth={2} />{gig.audienceSize}</GigRowMeta>
+                  )}
+                  {gig.video_url && (
+                    <GigRowWatchBtn type="button" onClick={e => { e.stopPropagation(); setWatchingUrl(gig.video_url); }}>
+                      <Video size={10} strokeWidth={2} />Watch
+                    </GigRowWatchBtn>
+                  )}
+                </GigRow>
+              );
+            })}
           </GigList>
         </>
       )}

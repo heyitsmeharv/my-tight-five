@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { ulid } from 'ulid';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
-import { Plus, X, Users, FileText, ThumbsUp, Minus, Bomb, Video } from 'lucide-react';
+import { Plus, X, Users, FileText, ThumbsUp, Minus, Bomb, Video, Check } from 'lucide-react';
 import { useResource } from '../hooks/useResource';
 import { getVideoUploadUrl, deleteVideoFile } from '../utils/api';
-import { Input, Textarea, Select, Label, FormGroup } from '../components/ui/Input';
+import { Input, Textarea, Label, FormGroup } from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -206,6 +206,29 @@ const RateBtnRow = styled.div`
   overflow: hidden;
 `;
 
+const SetChipList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+`;
+
+const SetChip = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
+  border: 1px solid ${({ theme, $active }) => $active ? theme.primary : theme.border};
+  background: ${({ theme, $active }) => $active ? theme.primaryLight : 'transparent'};
+  color: ${({ theme, $active }) => $active ? theme.primary : theme.textMuted};
+  font-family: ${({ theme }) => theme.fontMono};
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+`;
+
 const RateBtn = styled.button`
   flex: 1;
   display: flex;
@@ -327,7 +350,25 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-const EMPTY_FORM = { date: todayIso(), venue: '', setId: '', audienceSize: '', notes: '', video_url: null, ratings: {} };
+const EMPTY_FORM = { date: todayIso(), venue: '', setIds: [], audienceSize: '', notes: '', video_url: null, ratings: {} };
+
+function gigSetIds(gig) {
+  return gig.setIds || (gig.setId ? [gig.setId] : []);
+}
+
+function combinedJokeIds(setIds, setsList) {
+  const idSet = new Set(setIds);
+  const seen = new Set();
+  const result = [];
+  setsList.filter(s => idSet.has(s.id)).forEach(s => {
+    (s.joke_ids || []).forEach(jid => { if (!seen.has(jid)) { seen.add(jid); result.push(jid); } });
+  });
+  return result;
+}
+
+function sameIds(a, b) {
+  return [...a].sort().join(',') === [...b].sort().join(',');
+}
 
 const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024;
 
@@ -407,10 +448,11 @@ export default function Gigs() {
     reactions
       .filter(r => r.gigId === gig.id)
       .forEach(r => { if (!(r.jokeId in gigRatings)) gigRatings[r.jokeId] = r.rating; });
+    const ids = gigSetIds(gig);
     setEditForm({
       date: gig.date || '',
       venue: gig.venue || '',
-      setId: gig.setId || '',
+      setIds: ids,
       audienceSize: gig.audienceSize != null ? String(gig.audienceSize) : '',
       notes: gig.notes || '',
       video_url: gig.video_url || null,
@@ -419,17 +461,24 @@ export default function Gigs() {
     clearVideoLocalPreview();
     setEditingGigId(gig.id);
 
-    if (gig.setId && (!gig.setJokeIds || !gig.setName)) {
-      const selectedSet = setMap[gig.setId];
-      if (selectedSet) {
-        update(gig.id, { ...gig, setJokeIds: selectedSet.joke_ids || [], setName: selectedSet.name || null }).catch(() => {});
-      }
+    if (ids.length && (!gig.setJokeIds || !gig.setNames)) {
+      update(gig.id, {
+        ...gig,
+        setJokeIds: combinedJokeIds(ids, sets),
+        setNames: ids.map(id => setMap[id]?.name).filter(Boolean),
+      }).catch(() => {});
     }
   }
 
   function closeEdit() {
     clearVideoLocalPreview();
     setEditingGigId(null);
+  }
+
+  function toggleSetId(id, isEdit) {
+    const toggle = ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
+    if (isEdit) setEditForm(prev => ({ ...prev, setIds: toggle(prev.setIds) }));
+    else setForm(prev => ({ ...prev, setIds: toggle(prev.setIds) }));
   }
 
   function setRating(jokeId, rating, isEdit) {
@@ -578,14 +627,14 @@ export default function Gigs() {
     setSaving(true);
     try {
       const gigId = newGigIdRef.current;
-      const selectedSet = form.setId ? setMap[form.setId] : null;
+      const selectedSets = sets.filter(s => form.setIds.includes(s.id));
       await create({
         id: gigId,
         date: form.date,
         venue: form.venue.trim(),
-        setId: form.setId || null,
-        setJokeIds: selectedSet?.joke_ids || [],
-        setName: selectedSet?.name || null,
+        setIds: form.setIds,
+        setJokeIds: combinedJokeIds(form.setIds, sets),
+        setNames: selectedSets.map(s => s.name || 'Untitled'),
         audienceSize: form.audienceSize ? parseInt(form.audienceSize, 10) : null,
         notes: form.notes.trim() || null,
         video_url: videoKey(form.video_url),
@@ -612,16 +661,18 @@ export default function Gigs() {
     setUpdating(true);
     try {
       const editingGig = gigs.find(g => g.id === editingGigId);
-      const setChanged = editForm.setId !== (editingGig?.setId || '');
-      const selectedSet = editForm.setId ? setMap[editForm.setId] : null;
-      const setJokeIds = (setChanged || !editingGig?.setJokeIds) ? (selectedSet?.joke_ids || []) : editingGig.setJokeIds;
-      const setName = (setChanged || !editingGig?.setName) ? (selectedSet?.name || null) : editingGig.setName;
+      const setChanged = !sameIds(editForm.setIds, editingGig ? gigSetIds(editingGig) : []);
+      const selectedSets = sets.filter(s => editForm.setIds.includes(s.id));
+      const setJokeIds = (setChanged || !editingGig?.setJokeIds) ? combinedJokeIds(editForm.setIds, sets) : editingGig.setJokeIds;
+      const setNames = (setChanged || !editingGig?.setNames)
+        ? selectedSets.map(s => s.name || 'Untitled')
+        : editingGig.setNames;
       await update(editingGigId, {
         date: editForm.date,
         venue: editForm.venue.trim(),
-        setId: editForm.setId || null,
+        setIds: editForm.setIds,
         setJokeIds,
-        setName,
+        setNames,
         audienceSize: editForm.audienceSize ? parseInt(editForm.audienceSize, 10) : null,
         notes: editForm.notes.trim() || null,
         video_url: videoKey(editForm.video_url),
@@ -691,11 +742,18 @@ export default function Gigs() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Set</Label>
-              <Select value={form.setId} onChange={e => field('setId', e.target.value)}>
-                <option value="">No set</option>
-                {sets.map(s => <option key={s.id} value={s.id}>{s.name || 'Untitled'}</option>)}
-              </Select>
+              <Label>Sets</Label>
+              <SetChipList>
+                {sets.map(s => {
+                  const active = form.setIds.includes(s.id);
+                  return (
+                    <SetChip key={s.id} type="button" $active={active} onClick={() => toggleSetId(s.id, false)}>
+                      {active && <Check size={12} strokeWidth={2} />}
+                      {s.name || 'Untitled'}
+                    </SetChip>
+                  );
+                })}
+              </SetChipList>
             </FormGroup>
 
             <FormGroup>
@@ -705,7 +763,7 @@ export default function Gigs() {
 
             {renderVideoField(false)}
 
-            {renderJokeRatings(form.setId ? (setMap[form.setId]?.joke_ids || []) : [], form.ratings, false)}
+            {renderJokeRatings(combinedJokeIds(form.setIds, sets), form.ratings, false)}
 
             <SaveRow>
               <Button type="submit" $loading={saving} disabled={saving} style={{ width: '100%' }}>
@@ -719,7 +777,8 @@ export default function Gigs() {
           <EmptyState message="No gigs logged yet." />
         ) : (
           sortedGigs.map((gig, i) => {
-            const linkedSet = gig.setId ? setMap[gig.setId] : null;
+            const linkedSets = gigSetIds(gig).map(id => setMap[id]).filter(Boolean);
+            const displayNames = gig.setNames || (gig.setName ? [gig.setName] : linkedSets.map(s => s.name || 'Untitled'));
 
             if (editingGigId === gig.id) {
               return (
@@ -748,11 +807,18 @@ export default function Gigs() {
                   </FormGroup>
 
                   <FormGroup>
-                    <Label>Set</Label>
-                    <Select value={editForm.setId} onChange={e => fieldEdit('setId', e.target.value)}>
-                      <option value="">No set</option>
-                      {sets.map(s => <option key={s.id} value={s.id}>{s.name || 'Untitled'}</option>)}
-                    </Select>
+                    <Label>Sets</Label>
+                    <SetChipList>
+                      {sets.map(s => {
+                        const active = editForm.setIds.includes(s.id);
+                        return (
+                          <SetChip key={s.id} type="button" $active={active} onClick={() => toggleSetId(s.id, true)}>
+                            {active && <Check size={12} strokeWidth={2} />}
+                            {s.name || 'Untitled'}
+                          </SetChip>
+                        );
+                      })}
+                    </SetChipList>
                   </FormGroup>
 
                   <FormGroup>
@@ -763,9 +829,9 @@ export default function Gigs() {
                   {renderVideoField(true)}
 
                   {renderJokeRatings(
-                    editForm.setId !== (gig.setId || '')
-                      ? (setMap[editForm.setId]?.joke_ids || [])
-                      : (gig.setJokeIds || setMap[editForm.setId]?.joke_ids || []),
+                    !sameIds(editForm.setIds, gigSetIds(gig))
+                      ? combinedJokeIds(editForm.setIds, sets)
+                      : (gig.setJokeIds || combinedJokeIds(editForm.setIds, sets)),
                     editForm.ratings,
                     true
                   )}
@@ -784,10 +850,10 @@ export default function Gigs() {
                 <GigDate>{formatGigDate(gig.date)}</GigDate>
                 <GigVenue>{gig.venue}</GigVenue>
                 <GigMeta>
-                  {(gig.setName || linkedSet) && (
+                  {displayNames.length > 0 && (
                     <GigMetaItem>
                       <FileText size={11} strokeWidth={2} />
-                      {gig.setName || linkedSet?.name || 'Untitled'}
+                      {displayNames.join(', ')}
                     </GigMetaItem>
                   )}
                   {gig.audienceSize != null && (
